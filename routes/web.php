@@ -247,12 +247,10 @@ Route::get('/logout', 'App\Http\Controllers\Auth\LoginController@logout');
         
         Route::resource('blog', 'App\Http\Controllers\BlogController');
         Route::get('filter_blog', ['as' => 'filter_blog', 'uses' => 'App\Http\Controllers\BlogController@filter_blog']);
-        // Route::post('cmsStore', ['as' => 'cmsStore', 'uses' => 'App\Http\Controllers\CmsController@store']);
-        // Route::post('cmsUpdate', ['as' => 'cmsUpdate', 'uses' => 'App\Http\Controllers\CmsController@update']);
-        // Route::get('cmsView', ['as' => 'cmsView', 'uses' => 'App\Http\Controllers\CmsController@cmsView']);
         Route::post('blogStatusChange', ['as' => 'blogStatusChange', 'uses' => 'App\Http\Controllers\BlogController@BlogStatusChange']);
 
-    
+        Route::resource('staff', 'App\Http\Controllers\StaffController');
+        Route::get('filter_staff', ['as' => 'filter_staff', 'uses' => 'App\Http\Controllers\StaffController@filter_staff']);
     
     
    
