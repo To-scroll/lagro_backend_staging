@@ -901,7 +901,7 @@ class ProductApiController extends Controller
     
         return response()->json([
             'status' => true,
-            'total_products' => $total,
+            'total products of all ' . $request->category_slug => $total,
             'current_page' => $page,
             'per_page' => $limit,
             //'total_products' => $products->count(),

@@ -106,9 +106,9 @@ Route::get('get-pages',[HomeApiController::class,'getPages']);
 
 Route::Post('check-availabile',[UserApiController::class,'CheckAvailable']);
 
-Route::get('get-filtered-products',[ProductApiController::class,'getFilteredProducts']);
+Route::post('get-filtered-products',[ProductApiController::class,'getFilteredProducts']);
 
-Route::get('get-price-filtered-products',[ProductApiController::class,'getPriceFilteredProducts']);
+Route::post('get-price-filtered-products',[ProductApiController::class,'getPriceFilteredProducts']);
 
 Route::get('get-largest-priced-product',[ProductApiController::class,'getLargestpriceproduct']);
 
