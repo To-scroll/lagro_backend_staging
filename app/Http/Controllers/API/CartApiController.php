@@ -269,9 +269,14 @@ class CartApiController extends Controller
 	    public function addToCart(Request $request)
 	    {
 
-	    if (\Auth::guard('api')->check()) {
-            $customer_id = \Auth::guard('api')->id();
-        } 
+	    if (!\Auth::guard('api')->check()) 
+	        {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please login to add items to your cart.',
+                ], 401);
+            }
+        $customer_id = \Auth::guard('api')->id();
         
 		$product=Product::find($request->product_id);
 		$sku=Sku::where('product_id',$request->product_id)->where('id',$request->sku_id)->first();

@@ -113,6 +113,9 @@ protected $guarded =[];
    }
    
    
-
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class, 'order_id');
+    }
    
 }

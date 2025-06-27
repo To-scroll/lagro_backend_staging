@@ -71,7 +71,7 @@ Route::group(['middleware'=>['auth:api']],function(){
     Route::post('add-to-cart',[CartApiController::class,'addToCart']);
     Route::get('fetch-cart',[CartApiController::class,'fetchCart']);
     
-     
+    Route::get('invoice-download', [UserApiController::class,'downloadInvoice']);
 });
 
 
