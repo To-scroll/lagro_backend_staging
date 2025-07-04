@@ -34,8 +34,6 @@ class UserApiController extends Controller
 {
     public function addAddress(Request $request)
     {
-        // dd($request);
-        // \Log::info($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'phone' => 'required',
@@ -88,7 +86,6 @@ class UserApiController extends Controller
     
     public function updateAddress(Request $request)
     {
-        // \Log::info($request->all());
         $validator = Validator::make($request->all(), [
             'address_id' => 'required',
             'name' => 'required',
@@ -193,23 +190,44 @@ class UserApiController extends Controller
     
     
     public function placeOrder(Request $request)
-    {
-        // \Log::info($request->all());
+    {	
+
+         
         $user=auth()->user();
         if(!$user)
         {
             return response()->json(['status'=>false,'message'=>'User Not Found']);
         }
-        // \Log::info($user);
-        $cartItems= CartItems::where('customer_id', $user->id)->get();
+        
+        //$cartItems= CartItems::where('customer_id', $user->id)->get();
+        
+        
+        if ($request->cart_type === 'buy')
+        {
+            $cartItems = CartItems::where('customer_id', $user->id)
+            ->where(function ($query) {
+                $query->where('cart_type', 'buy');
+            })
+            ->get();
+        
+        }
+        
+        if ($request->cart_type === 'cart' || $request->cart_type === null)
+        {
+            $cartItems = CartItems::where('customer_id', $user->id)
+                ->where('cart_type', 'cart')
+                ->get();
+        }
+
+
         $amount = $cartItems->sum('total');
         
         $shipping_charge=$request->shipping_charge;
         
         $address = Address::find($request->address_id);
+        
         // $totalAmount=100.00;
         $totalAmount = ($amount + $shipping_charge) * 100;
-        // dd($totalAmount);
         $offer_sku=$request->offersku_id;
         
         $razorKey = 'rzp_test_6M10IZtEi8FbEZ';  
@@ -259,106 +277,105 @@ class UserApiController extends Controller
                 'phone' => $address->phone_number,
             ]
         ]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => false, 'message' => 'Error creating Razorpay order: ' . $e->getMessage()]);
-        }
-        $order = $order->toArray();
+    } catch (\Exception $e) {
+        return response()->json(['status' => false, 'message' => 'Error creating Razorpay order: ' . $e->getMessage()]);
+    }
+    $order = $order->toArray();
 
-        try {
-            $newOrder = Orders::create([
-                'payment_order_id' => $order['id'],
-                'total_amount' => $order['amount'] / 100,
-                'customer_id' => $user->id,
-                'customer_name' => $address->name,
-                'customer_phone' => $address->phone_number,
-                'customer_email' => $user->email,
-                'address' => $address->address,
-                'landmark' => $address->city,
-                'pincode' => $address->pincode,
+    try {
+        $newOrder = Orders::create([
+            'payment_order_id' => $order['id'],
+            'total_amount' => $order['amount'] / 100,
+            'customer_id' => $user->id,
+            'customer_name' => $address->name,
+            'customer_phone' => $address->phone_number,
+            'customer_email' => $user->email,
+            'address' => $address->address,
+            'landmark' => $address->city,
+            'pincode' => $address->pincode,
+            
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+            'date' => Carbon::now()->toDateTimeString(),
+            'offer_productsku' =>$offer_sku,
+            'shipping_charge' =>$shipping_charge,
+        ]);
+        
+        /*
+        foreach ($cartItems as $item) {
+            OrderItems::create([
+                'order_id' => $newOrder->id,
+                'order_no' => $newOrder->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product_name,
+                'thumbnail' => Product::getProductThumbnail($item->product_id),
+                'sku_id' => $item->sku_id,
+                'sku_title' => $item->sku,
+                'combination' => $item->combination,
+                'combination_id' => $item->combination_id,
+                'skuvalues_ids' => $item->skuvalues_ids,
+                'qty' => $item->quantity,
+                'price' => $item->price,
+                'special_price' => $item->special_price,
+                'total' => $item->total,
                 
-                'created_by' => $user->id,
-                'updated_by' => $user->id,
-                'date' => Carbon::now()->toDateTimeString(),
-                'offer_productsku' =>$offer_sku,
-                'shipping_charge' =>$shipping_charge,
             ]);
-            /*
-            foreach ($cartItems as $item) {
-                OrderItems::create([
-                    'order_id' => $newOrder->id,
-                    'order_no' => $newOrder->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product_name,
-                    'thumbnail' => Product::getProductThumbnail($item->product_id),
-                    'sku_id' => $item->sku_id,
-                    'sku_title' => $item->sku,
-                    'combination' => $item->combination,
-                    'combination_id' => $item->combination_id,
-                    'skuvalues_ids' => $item->skuvalues_ids,
-                    'qty' => $item->quantity,
-                    'price' => $item->price,
-                    'special_price' => $item->special_price,
-                    'total' => $item->total,
-                    
-                ]);
+        }
+        */
+        foreach ($cartItems as $item) 
+        {
+            $sku = Sku::find($item->sku_id);
+        
+            if (!$sku) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "SKU not found for item ID: {$item->sku_id}",
+                ], 404);
             }
-            */
-            foreach ($cartItems as $item) 
-            {
-                $sku = Sku::find($item->sku_id);
-            
-                if (!$sku) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "SKU not found for item ID: {$item->sku_id}",
-                    ], 404);
-                }
-            
-                if ($sku->quantity < $item->quantity) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "Insufficient stock for SKU: {$sku->id}. Available: {$sku->quantity}, Requested: {$item->quantity}",
-                    ], 400);
-                }
-                OrderItems::create([
-                    'order_id' => $newOrder->id,
-                    'order_no' => $newOrder->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product_name,
-                    'product_slug' => Product::getProductSlug($item->product_id),
-                    'thumbnail' => Product::getProductThumbnail($item->product_id),
-                    'sku_id' => $item->sku_id,
-                    'sku_title' => $item->sku,
-                    'combination' => $item->combination,
-                    'combination_id' => $item->combination_id,
-                    'skuvalues_ids' => $item->skuvalues_ids,
-                    'qty' => $item->quantity,
-                    'price' => $item->price,
-                    'special_price' => $item->special_price,
-                    'total' => $item->total,
-                ]);
+        
+            if ($sku->quantity < $item->quantity) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Insufficient stock for SKU: {$sku->id}. Available: {$sku->quantity}, Requested: {$item->quantity}",
+                ], 400);
             }
-
-            
-            //here create ordertimes
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            OrderItems::create([
+                'order_id' => $newOrder->id,
+                'order_no' => $newOrder->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product_name,
+                'product_slug' => Product::getProductSlug($item->product_id),
+                'thumbnail' => Product::getProductThumbnail($item->product_id),
+                'sku_id' => $item->sku_id,
+                'sku_title' => $item->sku,
+                'combination' => $item->combination,
+                'combination_id' => $item->combination_id,
+                'skuvalues_ids' => $item->skuvalues_ids,
+                'qty' => $item->quantity,
+                'price' => $item->price,
+                'special_price' => $item->special_price,
+                'total' => $item->total,
+            ]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Order Generated', 'order' => $order ,'offer_productsku_id' => $offer_sku,]);
+        
+        //here create ordertimes
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+
+    return response()->json(['success' => true, 'message' => 'Order Generated', 'order' => $order ,'offer_productsku_id' => $offer_sku,]);
     }
     
    /* 
     
     public function placeOrder(Request $request)
     {
-        \Log::info($request->all());
         $user=auth()->user();
         if(!$user)
         {
             return response()->json(['status'=>false,'message'=>'User Not Found']);
         }
-        \Log::info($user);
         $cart = Cart::where('customer_id', $user->id)->first();
         $amount = CartItems::where('cart_id', $cart->id)->sum('total');
         $address = Address::find($request->address_id);
@@ -411,53 +428,53 @@ class UserApiController extends Controller
                 'phone' => $address->phone,
             ]
         ]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => false, 'message' => 'Error creating Razorpay order: ' . $e->getMessage()]);
-        }
+    } catch (\Exception $e) {
+        return response()->json(['status' => false, 'message' => 'Error creating Razorpay order: ' . $e->getMessage()]);
+    }
 
-        $order = $order->toArray();
+    $order = $order->toArray();
 
-        try {
-            $newOrder = Orders::create([
-                'r_payment_id' => $order['id'],
-                'total_amount' => $order['amount'],
-                'customer_id' => $user->id,
-                'customer_name' => $address->name,
-                'customer_phone' => $address->phone_number,
-                'customer_email' => $user->email,
-                'address' => $address->address,
-                'landmark' => $address->city,
-                'pincode' => $address->pincode,
-                'created_by' => $user->id,
-                'updated_by' => $user->id,
-                'date' => Carbon::now()->toDateTimeString(),
+    try {
+        $newOrder = Orders::create([
+            'r_payment_id' => $order['id'],
+            'total_amount' => $order['amount'],
+            'customer_id' => $user->id,
+            'customer_name' => $address->name,
+            'customer_phone' => $address->phone_number,
+            'customer_email' => $user->email,
+            'address' => $address->address,
+            'landmark' => $address->city,
+            'pincode' => $address->pincode,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+            'date' => Carbon::now()->toDateTimeString(),
+        ]);
+        $cartItems = CartItems::where('cart_id', $cart->id)->get();
+        foreach ($cartItems as $item) {
+            OrderItems::create([
+                'order_id' => $newOrder->id,
+                'order_no' => $newOrder->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product_name,
+                'thumbnail' => Product::getProductThumbnail($item->product_id),
+                'sku_id' => $item->sku_id,
+                'sku_title' => $item->sku,
+                'combination' => $item->combination,
+                'combination_id' => $item->combination_id,
+                'skuvalues_ids' => $item->skuvalues_ids,
+                'qty' => $item->quantity,
+                'price' => $item->price,
+                'special_price' => $item->special_price,
+                'total' => $item->total,
             ]);
-            $cartItems = CartItems::where('cart_id', $cart->id)->get();
-            foreach ($cartItems as $item) {
-                OrderItems::create([
-                    'order_id' => $newOrder->id,
-                    'order_no' => $newOrder->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product_name,
-                    'thumbnail' => Product::getProductThumbnail($item->product_id),
-                    'sku_id' => $item->sku_id,
-                    'sku_title' => $item->sku,
-                    'combination' => $item->combination,
-                    'combination_id' => $item->combination_id,
-                    'skuvalues_ids' => $item->skuvalues_ids,
-                    'qty' => $item->quantity,
-                    'price' => $item->price,
-                    'special_price' => $item->special_price,
-                    'total' => $item->total,
-                ]);
-            }
-            
-            //here create ordertimes
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
+        
+        //here create ordertimes
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
 
-        return response()->json(['success' => true, 'message' => 'Order Generated', 'order' => $order]);
+    return response()->json(['success' => true, 'message' => 'Order Generated', 'order' => $order]);
     }
     
     */
@@ -466,8 +483,6 @@ class UserApiController extends Controller
     
     public function verifyPayment(Request $request)
     {
-         //\Log::info('this for verify payment-------------------------------------------------------------------------------');
-        // \Log::info($request->all());
         /*$razorKey = 'rzp_test_hvXAFt3k0ECBRW';  
         $razorSecret = 'hqhJT5hLIK1YCql99O8GROII';
         $api = new Api($razorKey, $razorSecret);
@@ -481,32 +496,32 @@ class UserApiController extends Controller
         // Verify payment signature
         $api->utility->verifyPaymentSignature($verificationData);
 
-        \Log::info('Payment verification successful for order: ' . $request->order_id, $verificationData);
-
         return response()->json(['status' => true, 'message' => 'Payment verified successfully!', 'data' => $verificationData]);
-        } catch (\Exception $e) {
-            \Log::error('Payment verification failed: ' . $e->getMessage(), $verificationData);
+    } catch (\Exception $e) {
 
-            return response()->json(['status' => false, 'message' => 'Payment verification failed!', 'error' => $e->getMessage()]);
-        }*/
+        return response()->json(['status' => false, 'message' => 'Payment verification failed!', 'error' => $e->getMessage()]);
+    }*/
+         try 
+         {
         
+        $razorKey = 'rzp_test_6M10IZtEi8FbEZ';  
+        $razorSecret = 'Aokvn8WzjWuEzXEGCr7fdxzg';
+        $api = new Api($razorKey, $razorSecret);
 
-            try 
-            {
-        // \Log::info($request);
+        $payment = $api->payment->fetch($request->razorpay_payment_id);
+
+            //$cartItems = CartItems::where('customer_id', \Auth::user()->id)->get();
+            $cartItems = CartItems::where('customer_id', \Auth::user()->id)
+                ->where('cart_type', 'buy')
+                ->get();
             
-            $razorKey = 'rzp_test_6M10IZtEi8FbEZ';  
-            $razorSecret = 'Aokvn8WzjWuEzXEGCr7fdxzg';
-            $api = new Api($razorKey, $razorSecret);
+            if ($cartItems->isEmpty()) {
+                $cartItems = CartItems::where('customer_id', \Auth::user()->id)
+                    ->where('cart_type', 'cart')
+                    ->get();
+            }
 
-            // Fetch payment object
-            $payment = $api->payment->fetch($request->razorpay_payment_id);
-
-        // Log or use this info
-        //\Log::info('Payment Method: ' . $payment->method);
-            $cartItems = CartItems::where('customer_id', \Auth::user()->id)->get();
             $orderData = Orders::where('payment_order_id',$request->payment_order_id)->first();
-            
             $orderData->r_payment_id=$request->razorpay_payment_id;
             
             $orderData->signature=$request->razorpay_signature;
@@ -560,11 +575,7 @@ class UserApiController extends Controller
                     
                 }
                
-              
                 foreach ($cartItems as $item) {
-                    //  \Log::info('this for item -------------------------------------------------------------------------------');
-                    // \Log::info($item);
-                    
                     $sku = Sku::find($item->sku_id);
                     $sku->quantity -= $item->quantity;
                     if ($sku->quantity == 0) 
@@ -573,7 +584,16 @@ class UserApiController extends Controller
                     }
                 
                     $sku->save();
-                        $item->delete();
+                    $item->delete();
+                    
+                    if ($item->cart_type === 'buy') {
+                        CartItems::where('customer_id', $item->customer_id)
+                            ->where('product_id', $item->product_id)
+                            ->where('sku_id', $item->sku_id)
+                            ->where('cart_type', 'cart')
+                            ->delete();
+                    }
+                   
                 }
                 return response()->json([
                     'message' => 'Order Placed',
@@ -582,13 +602,12 @@ class UserApiController extends Controller
     
             }
             return response()->json(['status'=>true,
+                                   
                                     'message'=>'Successflly Placed']);
         }
         
         
             catch (\Exception) {
-            // \Log::error('Payment verification failed:');
-    
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while verifying payment.',
@@ -600,7 +619,6 @@ class UserApiController extends Controller
    /*
     public function verifyPayment(Request $request)
     {
-        \Log::info($request->all());
         /*$razorKey = 'rzp_test_hvXAFt3k0ECBRW';  
         $razorSecret = 'hqhJT5hLIK1YCql99O8GROII';
         $api = new Api($razorKey, $razorSecret);
@@ -614,14 +632,11 @@ class UserApiController extends Controller
         // Verify payment signature
         $api->utility->verifyPaymentSignature($verificationData);
 
-        \Log::info('Payment verification successful for order: ' . $request->order_id, $verificationData);
-
         return response()->json(['status' => true, 'message' => 'Payment verified successfully!', 'data' => $verificationData]);
-        } catch (\Exception $e) {
-            \Log::error('Payment verification failed: ' . $e->getMessage(), $verificationData);
+    } catch (\Exception $e) {
 
-            return response()->json(['status' => false, 'message' => 'Payment verification failed!', 'error' => $e->getMessage()]);
-        }
+        return response()->json(['status' => false, 'message' => 'Payment verification failed!', 'error' => $e->getMessage()]);
+    }
     
         $cart = Cart::where('customer_id', \Auth::user()->id)->first();
         $cartItems = CartItems::where('cart_id', $cart->id)->get();
@@ -693,123 +708,123 @@ class UserApiController extends Controller
         $cartItems= CartItems::where('customer_id', $user->id)->get();
         $amount = CartItems::where('id', $cartItems->id)->sum('total');
         $address = Address::where('is_defualt', 'yes')->where('customer_id', $cartItems->customer_id)->first();
-        // dd($cartItems);
-            $orderData = new Orders();
-            $orderData->customer_id = $cart->customer_id;
-            $orderData->customer_name = \Auth::user()->name;
-            $orderData->customer_email = \Auth::user()->email;
-            $orderData->customer_phone = \Auth::user()->phone;
-            if ($request->is_coupon_applied == "true") {
-                $orderData->is_coupon_applied = 'yes';
+// dd($cartItems);
+        $orderData = new Orders();
+        $orderData->customer_id = $cart->customer_id;
+        $orderData->customer_name = \Auth::user()->name;
+        $orderData->customer_email = \Auth::user()->email;
+        $orderData->customer_phone = \Auth::user()->phone;
+        if ($request->is_coupon_applied == "true") {
+            $orderData->is_coupon_applied = 'yes';
 
-                
-                if ($couponId) {
-                    $coupon = Coupons::where('id', $couponId)->first();
-                    if ($coupon) {
-                        $total = $cartItem->sum('total');
-
-                        $discountPercent = $coupon->offer_percent;
-
-                        $discountAmount = $total * $discountPercent / 100;
-                        $totalPrize = $total - $discountAmount;
-
-                        $orderData->total_amount = $totalPrize;
-                    
-                    }
-                }
-            } else {
-                $orderData->is_coupon_applied = 'no';
-                $orderData->total_amount = $amount;
-            }
-            $orderData->date = date('Y-m-d H:i:s');
-            $orderData->address = $address->address;
-            $orderData->landmark = $address->landmark;
-            $orderData->payment_method=$request->payment_method;
-            $orderData->reference_no=$request->reference_no;
-            $orderData->pincode = $address->pincode;
-            $orderData->address_name = $address->name;
-            $orderData->address_type = $address->type;
-            $orderData->created_by = \Auth::user()->id;
-            $orderData->updated_by = \Auth::user()->id;
-            $orderData->created_at = date('Y-m-d H:i:s');
-            $orderData->updated_at = date('Y-m-d H:i:s');
-            $orderData->reference_no = $request->payment_id;
-            $orderData->is_paid = 'yes';
-            if ($orderData->save()) {
-                $total = 0;
-                $orderItemsData = [];
-                foreach ($cartItems as $item) {
-                    $orderItem = new OrderItems();
-                    $orderItem->order_id = $orderData->id;
-                    $orderItem->order_no = $orderData->order_no;
-                    $orderItem->product_id = $item->product_id;
-                    $orderItem->product_name = $item->product_name;
-                    $orderItem->thumbnail = Product::getProductThumbnail($item->product_id);
-                    $orderItem->sku_id = $item->sku_id;
-                    $orderItem->sku_title = $item->sku;
-                    $orderItem->combination = $item->combination;
-                    $orderItem->combination_id = $item->combination_id;
-                    $orderItem->skuvalues_ids = $item->skuvalues_ids;
-                    $orderItem->qty = $item->quantity;
-                    $orderItem->price = $item->price;
-                    $orderItem->special_price = $item->special_price;
-                    $orderItem->total = $item->total;
-                    $orderItem->save();
-                    $orderItemsData[] = $orderItem;
-                    $total += $orderItem->total;
-
-                }
-                $orderData->total = $total;
-
-                $orderData->save();
-
-                $invoice = new Invoice();
-                $invoice->order_id = $orderData->id;
-                $invoice->order_no = $orderData->order_no;
-                $invoice->customer_id = \Auth::user()->id;
-                $invoice->customer_name = \Auth::user()->name;
-                $invoice->customer_phone = \Auth::user()->phone;
-                $invoice->customer_email = \Auth::user()->email;;
-                $invoice->date = date('Y-m-d H:i:s');
-                $invoice->payment_method = $request->payment_method;
-                $invoice->total_amount = $orderData->total;
-                $invoice->reference_no = $orderData->reference_no;
-                $invoice->address = $orderData->address;
-                $invoice->landmark = $orderData->landmark;
-                $invoice->pincode = $orderData->pincode;
-                $invoice->created_by = \Auth::user()->id;
-                $invoice->updated_by = \Auth::user()->id;
-                $invoice->created_at = date('Y-m-d H:i:s');
-                $invoice->updated_at = date('Y-m-d H:i:s');
-                $invoice->save();
-                $orderItems = OrderItems::where('order_id', $orderData->id)->get();
-                foreach ($orderItems as $row) {
-                    $invoiceItem = new InvoiceItems();
-                    $invoiceItem->order_id = $orderData->id;
-                    $invoiceItem->order_no = $orderData->order_no;
-                    $invoiceItem->invoice_no = $invoice->invoice_no;
-                    $invoiceItem->invoice_id = $invoice->id;
-                    $invoiceItem->order_item_id = $row->id;
-                    $invoiceItem->product_id = $row->product_id;
-                    $invoiceItem->product_name = $row->product_name;
-                    $invoiceItem->sku_id = $row->sku_id;
-                    $invoiceItem->sku_title = $row->sku_title;
-                    $invoiceItem->combination = $row->combination;
-                    $invoiceItem->qty = $row->qty;
-                    $invoiceItem->price = $row->price;
-                    $invoiceItem->special_price = $row->special_price;
-                    $invoiceItem->total = $row->total;
-                    $invoiceItem->skuvalues_ids = $row->skuvalues_ids;
-                    $invoiceItem->save();
-                }
             
-                $cartDelete = Cart::where('id', $cart->id)->delete();
-                $cartItemsDelete = CartItems::where('cart_id', $cart->id)->delete();
-                return response()->json([
-                    'message' => 'Order Placed',
-                ]);
+            if ($couponId) {
+                $coupon = Coupons::where('id', $couponId)->first();
+                if ($coupon) {
+                    $total = $cartItem->sum('total');
+
+                    $discountPercent = $coupon->offer_percent;
+
+                    $discountAmount = $total * $discountPercent / 100;
+                    $totalPrize = $total - $discountAmount;
+
+                    $orderData->total_amount = $totalPrize;
+                   
+                }
+            }
+        } else {
+            $orderData->is_coupon_applied = 'no';
+            $orderData->total_amount = $amount;
+        }
+        $orderData->date = date('Y-m-d H:i:s');
+        $orderData->address = $address->address;
+        $orderData->landmark = $address->landmark;
+        $orderData->payment_method=$request->payment_method;
+        $orderData->reference_no=$request->reference_no;
+        $orderData->pincode = $address->pincode;
+        $orderData->address_name = $address->name;
+        $orderData->address_type = $address->type;
+        $orderData->created_by = \Auth::user()->id;
+        $orderData->updated_by = \Auth::user()->id;
+        $orderData->created_at = date('Y-m-d H:i:s');
+        $orderData->updated_at = date('Y-m-d H:i:s');
+        $orderData->reference_no = $request->payment_id;
+        $orderData->is_paid = 'yes';
+        if ($orderData->save()) {
+            $total = 0;
+            $orderItemsData = [];
+            foreach ($cartItems as $item) {
+                $orderItem = new OrderItems();
+                $orderItem->order_id = $orderData->id;
+                $orderItem->order_no = $orderData->order_no;
+                $orderItem->product_id = $item->product_id;
+                $orderItem->product_name = $item->product_name;
+                $orderItem->thumbnail = Product::getProductThumbnail($item->product_id);
+                $orderItem->sku_id = $item->sku_id;
+                $orderItem->sku_title = $item->sku;
+                $orderItem->combination = $item->combination;
+                $orderItem->combination_id = $item->combination_id;
+                $orderItem->skuvalues_ids = $item->skuvalues_ids;
+                $orderItem->qty = $item->quantity;
+                $orderItem->price = $item->price;
+                $orderItem->special_price = $item->special_price;
+                $orderItem->total = $item->total;
+                $orderItem->save();
+                $orderItemsData[] = $orderItem;
+                $total += $orderItem->total;
 
             }
+            $orderData->total = $total;
+
+            $orderData->save();
+
+            $invoice = new Invoice();
+            $invoice->order_id = $orderData->id;
+            $invoice->order_no = $orderData->order_no;
+            $invoice->customer_id = \Auth::user()->id;
+            $invoice->customer_name = \Auth::user()->name;
+            $invoice->customer_phone = \Auth::user()->phone;
+            $invoice->customer_email = \Auth::user()->email;;
+            $invoice->date = date('Y-m-d H:i:s');
+            $invoice->payment_method = $request->payment_method;
+            $invoice->total_amount = $orderData->total;
+            $invoice->reference_no = $orderData->reference_no;
+            $invoice->address = $orderData->address;
+            $invoice->landmark = $orderData->landmark;
+            $invoice->pincode = $orderData->pincode;
+            $invoice->created_by = \Auth::user()->id;
+            $invoice->updated_by = \Auth::user()->id;
+            $invoice->created_at = date('Y-m-d H:i:s');
+            $invoice->updated_at = date('Y-m-d H:i:s');
+            $invoice->save();
+            $orderItems = OrderItems::where('order_id', $orderData->id)->get();
+            foreach ($orderItems as $row) {
+                $invoiceItem = new InvoiceItems();
+                $invoiceItem->order_id = $orderData->id;
+                $invoiceItem->order_no = $orderData->order_no;
+                $invoiceItem->invoice_no = $invoice->invoice_no;
+                $invoiceItem->invoice_id = $invoice->id;
+                $invoiceItem->order_item_id = $row->id;
+                $invoiceItem->product_id = $row->product_id;
+                $invoiceItem->product_name = $row->product_name;
+                $invoiceItem->sku_id = $row->sku_id;
+                $invoiceItem->sku_title = $row->sku_title;
+                $invoiceItem->combination = $row->combination;
+                $invoiceItem->qty = $row->qty;
+                $invoiceItem->price = $row->price;
+                $invoiceItem->special_price = $row->special_price;
+                $invoiceItem->total = $row->total;
+                $invoiceItem->skuvalues_ids = $row->skuvalues_ids;
+                $invoiceItem->save();
+            }
+           
+            $cartDelete = Cart::where('id', $cart->id)->delete();
+            $cartItemsDelete = CartItems::where('cart_id', $cart->id)->delete();
+            return response()->json([
+                'message' => 'Order Placed',
+            ]);
+
+        }
 
     }
     
@@ -821,7 +836,7 @@ class UserApiController extends Controller
         $user = auth()->user();
         $orderHistory = Orders::where('customer_id', $user->id)
             ->where('is_paid', 'yes') 
-            ->with(['orderItems', 'offerSku','invoice.invoiceItems'])
+            ->with(['orderItems', 'offerSku'])
             ->select('id', 'order_no', 'total_amount', 'date', 'status', 'delivery_status', 'offer_productsku','shipping_charge')
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -934,7 +949,6 @@ class UserApiController extends Controller
             'maxRows' => 1,
             'username' => 'Lagro_V1'
         ]);
-//   \Log::info($geoResponse);
         if (!$geoResponse->ok() || empty($geoResponse['postalCodes'])) {
             return response()->json(['error' => 'Invalid pincode or GeoNames error.'], 400);
         }
@@ -1006,7 +1020,6 @@ class UserApiController extends Controller
    
     public function downloadInvoice(Request $request)
 	{
-	   //  \Log::info($request);
 	    $id=$request->invoice_id;
 		$data=Invoice::with('InvoiceItems','customers','customerAddress')->find($id);
 		$pdf = PDF::loadView('admin.invoice.invoice', compact('data'));

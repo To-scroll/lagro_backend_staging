@@ -76,14 +76,8 @@ class CartApiController extends Controller
    /*
     public function addToCart(Request $request)
 	{
-	     \Log::info($request);
-
-	    \Log::info('Request Headers:', request()->headers->all());
-        \Log::info('Cookies:', request()->cookies->all());
-
 	    Session::put('test_key', 'Hello');
 		$session_id=Session::get('session_id') == null ? 0 : Session::get('session_id'); 
-	   // dd(\Auth::guard('api')->check());
 		if(\Auth::guard('api')->check() != true)
 		{
 		  //  	dd("hai");
@@ -148,7 +142,6 @@ class CartApiController extends Controller
 		}
 		$cartItems->save();
 		$updatedCart = Cart::with('cartItems')->find($cart->id);
-		\Log::info('All Session Data Cart:', Session::all());
 		
 
         return response()->json(['message' => 'Item added to cart successfully','updatedCart'=>$updatedCart]);
@@ -199,7 +192,6 @@ class CartApiController extends Controller
     public function fetchCart(Request $request)
     {
       $user = \Auth::guard('api')->id();
-      \Log::info($user);
       $cart = Cart::where('customer_id', $user)->first();
       if (!$cart) {
         return response()->json([
@@ -225,14 +217,9 @@ class CartApiController extends Controller
         //  Session::flush();
         // session()->flush();
         $sessionCookie = request()->cookie('laravel_session');
-        \Log::info('Session Cookie:', ['laravel_session' => $sessionCookie]);
-        \Log::info('Session ID:', [session()->getId()]);
-
-        \Log::info('All Session Data:', Session::all());
+       
         $user = auth()->user();
-        \Log::info('All Session Data:', $user);
         $session_id = Session::get('session_id') ?? 0;
-        \Log::info($session_id);
         if (!$user) {
             $cart = Cart::where('customer_id', $session_id)->first();
         } else {
@@ -268,34 +255,41 @@ class CartApiController extends Controller
 
 	    public function addToCart(Request $request)
 	    {
-
-	    if (!\Auth::guard('api')->check()) 
+	       if (!\Auth::guard('api')->check()) 
 	        {
                 return response()->json([
                     'status' => false,
                     'message' => 'Please login to add items to your cart.',
                 ], 401);
             }
+
         $customer_id = \Auth::guard('api')->id();
+        $cart_type = $request->cart_type ?? 'cart';
         
 		$product=Product::find($request->product_id);
 		$sku=Sku::where('product_id',$request->product_id)->where('id',$request->sku_id)->first();
 		$skValues=SkuValues::where('product_id',$request->product_id)->where('sku_id',$request->sku_id)->get()->pluck('id');
 
-	    $cartItems=CartItems::where('customer_id', $customer_id)->where('product_id',$request->product_id)
-    		->where('sku_id',$request->sku_id)
-    		->first();
-    		
-    	// for check availability
         $newQty = $request->quantity;
-    
         if ($newQty > $sku->quantity) {
             return response()->json([
                 'status' => false,
                 'message' => 'Only ' . $sku->quantity . ' items available in stock for this product.',
             ], 422);
-        }		
-    		
+        }
+        
+        if ($cart_type === 'buy') {
+            CartItems::where('customer_id', $customer_id)
+                ->where('cart_type', 'buy')
+                ->delete();
+        }
+    
+        $cartItems = CartItems::where('customer_id', $customer_id)
+            ->where('product_id', $request->product_id)
+            ->where('sku_id', $request->sku_id)
+            ->where('cart_type', $cart_type)
+            ->first();
+    
     	if (!$cartItems) 
     	{
             $cartItems = new CartItems();
@@ -315,6 +309,7 @@ class CartApiController extends Controller
 		$cartItems->combination=$sku->combination_set;
 		$cartItems->combination_id=$sku->combination_id;
 		$cartItems->discount=$sku->discount;
+		$cartItems->cart_type = $cart_type ;
 // 		$cartItems->quantity=$request->quantity;
 		$cartItems->price=$sku->price;
 		$cartItems->special_price=$sku->special_price;
@@ -334,7 +329,6 @@ class CartApiController extends Controller
 		$cartItems->created_at=now();
 		$cartItems->updated_at=now();
 		$cartItems->save();
-		
 
         return response()->json(['message' => 'Item added to cart successfully',]);
 
@@ -358,6 +352,7 @@ class CartApiController extends Controller
         //$cartItems = CartItems::with('productItems')
         $cartItems = CartItems::with('sku_images','productItems')
             ->where('customer_id', $customer_id)
+            ->where('cart_type', 'cart')
             ->get();
     
         $subTotal = $cartItems->sum('total');
@@ -375,7 +370,6 @@ class CartApiController extends Controller
 
     public function removeCartItems(Request $request)
     {
-        // dd($request);
       $cartItemId = $request->input('cart_item_id');
 
         $cartItem = CartItems::find($cartItemId);
@@ -405,7 +399,6 @@ class CartApiController extends Controller
     /*
     public function updateCart(Request $request)
     {
-        //  \Log::info($request->cart_item_id);
         $cartItem = CartItems::find($request->cart_item_id);
     
         $cartItem->quantity = $request->quantity;
@@ -414,7 +407,6 @@ class CartApiController extends Controller
         $cartItem->total = $request->quantity * $price;
         
         $cartItem->save();
-    //  \Log::info($cartItem);
         return response()->json(['message' => 'Cart item updated successfully']);
     }
     */

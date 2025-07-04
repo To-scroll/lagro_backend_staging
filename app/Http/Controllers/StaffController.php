@@ -32,6 +32,7 @@ class StaffController extends Controller
         'name' => 'required',
         'email' => 'required|email|unique:users,email|unique:staff,email',
         'phone' => 'required',
+        'password' => 'required',
         'image' => 'required|image',
         ], 
         [
@@ -48,9 +49,9 @@ class StaffController extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->password = Hash::make($request->password);
         $user->phone = $request->phone;
         $user->user_type = 'staff';
-        $user->password = Hash::make('12345678');
         $user->profile_image = $imageName;
         
         $user->created_at = now();
@@ -113,6 +114,11 @@ class StaffController extends Controller
         // Update User table
         $user->name = $request->name;
         $user->email = $request->email;
+        
+        if (!empty($request->password)) 
+        {
+            $user->password = Hash::make($request->password);
+        }
         $user->phone = $request->phone;
         $user->profile_image = $imageName;
         $user->updated_at = now();
@@ -120,7 +126,7 @@ class StaffController extends Controller
     
         // Update Staff table
         $staff->name = $request->name;
-        $staff->email = $request->email;
+        $staff->email = $request->email; 
         $staff->phone = $request->phone;
         $staff->date_of_birth = $request->date_of_birth;
         $staff->place = $request->place;
@@ -218,5 +224,6 @@ class StaffController extends Controller
     }
 
 
+   
 }
 ?>

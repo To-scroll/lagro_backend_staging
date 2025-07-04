@@ -40,6 +40,12 @@
                             </div>
                             
                             <div class="col-md-6 mb-2">
+                                <label class="form-label" for="email">Password</label>
+                                
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Leave blank to keep current password">
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
                                 <label class="form-label" for="phone">Phone</label>
                                 
                                 <input type="text" class="form-control" id="phone" name="phone" value="{{ $data->phone }}" required>
