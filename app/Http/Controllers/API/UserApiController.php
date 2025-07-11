@@ -18,6 +18,7 @@ use App\Models\InvoiceItems;
 use App\Models\Sku;
 
 use App\Models\Warehouse;
+use App\Models\Location;
 use App\Models\Settings;
 
 use App\Http\Controllers\Controller;
@@ -27,7 +28,7 @@ use Validator;
 
 use Carbon\Carbon;
 use Razorpay\Api\Api;
-
+use PDF;
 use Illuminate\Http\Request;
 
 class UserApiController extends Controller
@@ -540,6 +541,7 @@ class UserApiController extends Controller
                 $invoice->customer_email = $orderData->customer_email;
                 $invoice->date = date('Y-m-d H:i:s');
                 $invoice->payment_method = $orderData->payment_method;
+                $invoice->shipping_charge = $orderData->shipping_charge;
                 $invoice->total_amount = $orderData->total_amount;
                 $invoice->is_paid = 'yes';
                 $invoice->invoice_generated = 'yes';
@@ -836,7 +838,7 @@ class UserApiController extends Controller
         $user = auth()->user();
         $orderHistory = Orders::where('customer_id', $user->id)
             ->where('is_paid', 'yes') 
-            ->with(['orderItems', 'offerSku'])
+             ->with(['orderItems', 'offerSku','invoice.invoiceItems'])
             ->select('id', 'order_no', 'total_amount', 'date', 'status', 'delivery_status', 'offer_productsku','shipping_charge')
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -939,7 +941,7 @@ class UserApiController extends Controller
     
     
     
-    
+    /*
     public function CheckAvailable(Request $request)
     {
         $customerPincode = $request->pincode;
@@ -1001,6 +1003,110 @@ class UserApiController extends Controller
 
         return response()->json($response);
     }
+    */
+    public function CheckAvailable(Request $request)
+    {
+        if (!\Auth::guard('api')->check()) 
+	        {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please login to add items to your cart.',
+                ], 401);
+            }
+
+        $customer_id = \Auth::guard('api')->id();
+
+        if ($request->cart_type === 'buy')
+        {
+            $cartItems = CartItems::where('customer_id', $customer_id)
+            ->where(function ($query) {
+                $query->where('cart_type', 'buy');
+            })
+            ->get();
+        }
+       else {
+            $cartItems = CartItems::where('customer_id', $customer_id)
+                ->where('cart_type', 'cart')
+                ->get();
+        }
+        
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Your cart is empty. Please add items before checking availability.',
+            ], 400);
+        }
+
+        
+        $customerPincode = $request->pincode;
+        $totalPrice = $cartItems->sum('total');
+    
+        $geoResponse = Http::get("http://api.geonames.org/postalCodeSearchJSON", [
+            'postalcode' => $customerPincode,
+            'country' => 'IN',
+            'maxRows' => 1,
+            'username' => 'Lagro_V1'
+        ]);
+    
+        if (!$geoResponse->ok() || empty($geoResponse['postalCodes'])) {
+            return response()->json(['error' => 'Invalid pincode or GeoNames error.'], 400);
+        }
+    
+        $customerLat = $geoResponse['postalCodes'][0]['lat'];
+        $customerLng = $geoResponse['postalCodes'][0]['lng'];
+    
+        $customerState = $geoResponse['postalCodes'][0]['adminName1'];
+
+        //$warehouses = Warehouse::where('state', $customerState)->get();
+         $warehouses = Location::where('state', $customerState)->get();
+        
+        if ($warehouses->isEmpty()) {
+            return response()->json(['error' => 'No warehouses available in your state.'], 404);
+        }
+    
+    
+    
+        $minDistance = null;
+        $nearestWarehouse = null;
+    
+        foreach ($warehouses as $warehouse) {
+            $distance = $this->calculateDistance($customerLat, $customerLng, $warehouse->latitude, $warehouse->longitude);
+        
+            if (is_null($minDistance) || $distance < $minDistance) {
+                $minDistance = $distance;
+                $nearestWarehouse = $warehouse;
+            }
+        }
+    
+        $roundedDistance = round($minDistance);
+    
+        $response = [
+            'warehouse' => [
+                'id' => $nearestWarehouse->id,
+                'warehouse_name' => $nearestWarehouse->location_name,
+                'latitude' => $nearestWarehouse->latitude,
+                'longitude' => $nearestWarehouse->longitude,
+            ],
+            'distance_km' => $roundedDistance
+        ];
+
+        if ($roundedDistance <= 100) {
+            $shippingCharge = 0;
+        } elseif ($roundedDistance > 100 && $totalPrice <= 25000) {
+            $shippingCharge = 2000;
+        } else {
+            $shippingCharge = 0;
+        }
+    
+        $response['shipping_charge'] = $shippingCharge;
+        $response['total_price'] = $totalPrice;
+        $response['customer_state'] = $customerState;
+    
+        return response()->json($response);
+    }
+
+
+
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {

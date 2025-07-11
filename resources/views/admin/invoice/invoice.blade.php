@@ -171,13 +171,14 @@ table tfoot td {
 table tfoot tr:first-child td {
   border-top: 1px solid  #ddd; 
    /*color: #57B223;*/
-   color: #0087C3;
+   /*color: #0087C3;*/
+   color: #000000;
    font-size: 1.4em;
 }
 
 table tfoot tr:last-child td {
   /*color: #57B223;*/
-  color: #0087C3;
+  color: #000000;
   font-size: 1.4em;
   border-top: 1px solid  #ddd; 
 
@@ -211,14 +212,18 @@ footer {
   padding: 8px 0;
   text-align: center;
 }
+.rupee {
+  font-family: DejaVu Sans, sans-serif;
+  font-size: 12px;
+}
 
-    </style>
+</style>
   </head>
   <body>
     <header class="clearfix">
       <div id="logo">
      		@if(\App\Models\Settings::getSettingsvalue('site_name') != '')
-			 <img src="{{ asset('public/images/settings/logo')}}/{{\App\Models\Settings::getSettingsvalue('logo') }}" alt="logo" width="200px">
+			 <img src="{{ asset('public/images/settings')}}/{{\App\Models\Settings::getSettingsvalue('logo') }}" alt="logo" width="100px">
 			@endif
       </div>
       <div id="company">
@@ -256,10 +261,10 @@ footer {
             <th class="qty">Product Name</th>
             <th class="qty" width=150px;>Variant/Details</th>
             <th class="qty">Sku</th>
-            <th class="qty">Price</th>
+            <th class="qty">Price     </th>
             <th class="qty">Sale Price</th>
             <th class="qty">Quantity</th>
-            <th class="qty">Total</th>
+            <th class="qty">Total     </th>
           </tr>
         </thead>
         <tbody>
@@ -272,13 +277,38 @@ footer {
             <td class="qty">{{$row->combination}}</td>
             <td class="qty">{{$row->sku_title}}</td>
             
-            <td class="qty"><span style="font-family: DejaVu Sans, sans-serif;">&#8377;</span> {{$row->price}}</td>
-            <td class="qty"><span style="font-family: DejaVu Sans, sans-serif;">&#8377;</span> {{$row->special_price}}</td>
+            <td class="qty"><span class="rupee">&#8377; {{($row->price) }}</span></td>
+            <td class="qty"><span class="rupee">&#8377; {{($row->special_price) }}</span> </td>
             <td class="qty">{{$row->qty}}</td>
-            <td class="qty"><span style="font-family: DejaVu Sans, sans-serif;">&#8377;</span> {{$row->total}}</td>
+            <td class="qty"><span class="rupee">&#8377; {{($row->total) }}</span></td>
           </tr>
         @endforeach
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5"></td>
+                <td>Subtotal</td>
+                <td colspan="2"><span class="rupee">&#8377; {{ number_format($data->total_amount - ($data->shipping_charge ?? 0), 2) }}</span></td>
+            </tr>
+            
+            @if(!empty($data->shipping_charge) && $data->shipping_charge > 0)
+            <tr>
+                <td colspan="5"></td>
+                <td>Delivery Charge</td>
+                <td colspan="2"> <span class="rupee">&#8377; {{ number_format($data->shipping_charge, 2) }}</span></td>
+            </tr>
+            @endif
+            
+            <tr>
+                <td colspan="5"></td>
+                <td><strong>Grand Total</strong></td>
+                <td colspan="2"><span class="rupee">&#8377; {{ number_format($data->total_amount, 2) }}</span></td>
+            </tr>
+        </tfoot>
+
+
+
+{{--
         <tfoot>
             <tr>
             <td colspan="2"></td>
@@ -291,10 +321,8 @@ footer {
             <td>Grand Total</td>
             <td  colspan="2"><span style="font-family: DejaVu Sans, sans-serif;">&#8377;</span>{{$data->total_amount}}</td>
           </tr>
-        
-      
         </tfoot>
-       
+--}}       
       </table>
 
      
