@@ -39,7 +39,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label" for="product-title-input">Status</label>
+                                <label class="form-label" for="product-title-input">Active Status</label>
 
                                 <select class="form-select" id="choices-publish-visibility-input" name="status"
                                     data-choices data-choices-search-false>
@@ -76,7 +76,7 @@
 
                             <div class="col-md-12">
                                 <label class="form-label" for="product-title-input">Priority</label>
-                                <input type="text" class="form-control" id="product-title-input"
+                                <input type="number" class="form-control" id="product-title-input"
                                     value="{{ $data->position }}" name="position" required>
 
                             </div>
@@ -107,7 +107,10 @@
            
             <div class="text-end mb-3">
                 <a href="{{ url('category') }}" class="btn btn-primary" style="width:95px;">Back</a>
-                <button type="submit" class="btn btn-success w-sm">Submit</button>
+                <button type="submit" class="btn btn-success w-sm" id="submit-button"> 
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Submit
+                </button>
             </div>
             <!-- end col -->
         </div>
@@ -174,7 +177,11 @@
             $("#categoryUpdateForm").on('submit', (function(e) {
                 $(".errors").html('');
                 e.preventDefault();
+                
                 $('#preloader').fadeIn(100);
+                $('#submit-button').prop('disabled', true);
+                $('#submit-button .spinner-border').removeClass('d-none');
+                
                 $.ajax({
                     url: "{{ route('categoryUpdate') }}",
                     type: "post",
@@ -183,7 +190,10 @@
                     cache: false,
                     processData: false,
                     success: function(response) {
-                        console
+                            $('#submit-button').prop('disabled', false);
+                            $('#submit-button .spinner-border').addClass('d-none');
+                            $('#preloader').fadeOut(100);
+                            
                         if (response.message == 'success') {
                             Swal.fire({
                                 position: 'center',
@@ -203,6 +213,9 @@
                     error: function(response) {
 
                         $('#preloader').fadeOut(100);
+                        $('#submit-button').prop('disabled', false);
+                        $('#submit-button .spinner-border').addClass('d-none');
+                        
                         jsonValue = jQuery.parseJSON(response.responseText);
                         $.each(jsonValue.errors, function(field_name, error) {
                             $(document).find('[name=' + field_name + ']').after(

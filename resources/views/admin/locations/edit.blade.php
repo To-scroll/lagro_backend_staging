@@ -54,6 +54,15 @@
                                 <input type="text" class="form-control" id="product-title-input" name="phone2" value="{{ $data->phone2 }}" >
                                
                             </div>
+                            <div class="col-md-6 mt-2">
+                                <label class="form-label" for="state-select">State</label>
+                                <select class="form-control" id="state-select" name="state" required>
+                                    <option value="">-- Select State --</option>
+                                    <option value="Kerala" {{ $data->state == 'Kerala' ? 'selected' : '' }}>Kerala</option>
+                                    <option value="Karnataka" {{ $data->state == 'Karnataka' ? 'selected' : '' }}>Karnataka</option>
+                                </select>
+                            </div>
+
                             <div class="col-md-12">
                                 <label class="form-label" for="product-title-input">Location Map</label>
 
@@ -82,6 +91,8 @@
         <!-- end row -->
 
     </form>
+   
+</div>
 @endsection
 @section('scripts')
    
@@ -89,10 +100,12 @@
     <script>
         
         $(document).ready(function() {
-            $("#locationsUpdateForm").on('submit', (function(e) {
+            $("#locationsUpdateForm").on('submit', function(e) {
                 $(".errors").html('');
                 e.preventDefault();
-                $('#preloader').fadeIn(100);
+        
+                $('#preloader').fadeIn(300);
+        
                 $.ajax({
                     url: "{{ route('locationsUpdate') }}",
                     type: "post",
@@ -101,36 +114,46 @@
                     cache: false,
                     processData: false,
                     success: function(response) {
-                        $('#locationsUpdateForm')[0].reset();
-                        if (response.message == 'success') {
+                       
+                        $('#preloader').fadeOut(100); 
+        
+                        if (response.message === 'success') {
                             Swal.fire({
                                 position: 'center',
                                 icon: 'success',
                                 title: 'Updated Successfully',
-
                                 showConfirmButton: false,
                                 timer: 1500
                             }).then(function() {
                                 window.location.href = '{{ url('locations') }}';
                             });
-
+                        } else {
+                            
+                            console.warn('Update did not return success:', response);
                         }
-
-                        $('#locationsUpdateForm')[0].reset();
                     },
                     error: function(response) {
-
-                        $('#preloader').fadeOut(100);
-                        jsonValue = jQuery.parseJSON(response.responseText);
-                        $.each(jsonValue.errors, function(field_name, error) {
+                        $('#preloader').fadeOut(100); 
+        
+                        let jsonValue;
+                        try {
+                            jsonValue = jQuery.parseJSON(response.responseText);
+                        } catch (e) {
+                            console.error('Invalid JSON response', e);
+                            return;
+                        }
+        
+                        $.each(jsonValue.errors || {}, function(field_name, error) {
                             $(document).find('[name=' + field_name + ']').after(
                                 '<small class="form-control-feedback text-danger errors"> ' +
-                                error + ' </small>')
+                                error + ' </small>'
+                            );
                         });
                     }
                 });
-            }));
+            });
         });
+
        
     </script>
 @endsection

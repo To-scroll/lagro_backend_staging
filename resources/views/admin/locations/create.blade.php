@@ -51,6 +51,15 @@
                                 <input type="text" class="form-control" id="product-title-input" name="phone2" placeholder="Enter Location Phone2" >
                                
                             </div>
+                            <div class="col-md-6 mt-2">
+                                <label class="form-label" for="state-select">State</label>
+                                <select class="form-control" id="state-select" name="state" required>
+                                    <option value="">-- Select State --</option>
+                                    <option value="Kerala">Kerala</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                </select>
+                            </div>
+                            
                             <div class="col-md-12 mt-2">
                                 <label class="form-label" for="product-title-input">Map (google-map link)</label>
 
@@ -84,10 +93,12 @@
 
 
         $(document).ready(function() {
-            $("#locationsCreateForm").on('submit', (function(e) {
+            $("#locationsCreateForm").on('submit', function(e) {
                 $(".errors").html('');
                 e.preventDefault();
+        
                 $('#preloader').fadeIn(100);
+        
                 $.ajax({
                     url: "{{ route('locationsStore') }}",
                     type: "post",
@@ -96,36 +107,38 @@
                     cache: false,
                     processData: false,
                     success: function(response) {
-                        $('#locationsCreateForm')[0].reset();
+                        $('#preloader').fadeOut(100); // hide loader here
+        
                         if (response.message == 'success') {
                             Swal.fire({
                                 position: 'center',
                                 icon: 'success',
                                 title: 'Created Successfully',
-
                                 showConfirmButton: false,
                                 timer: 1500
                             }).then(function() {
                                 window.location.href = '{{ url('locations') }}';
                             });
-
+                        } else {
+                            // Optional: handle cases where message is not success
+                            $('#locationsCreateForm')[0].reset();
                         }
-
-                        $('#locationsCreateForm')[0].reset();
                     },
                     error: function(response) {
-
-                        $('#preloader').fadeOut(100);
+                        $('#preloader').fadeOut(100); // hide loader here too
+        
                         jsonValue = jQuery.parseJSON(response.responseText);
                         $.each(jsonValue.errors, function(field_name, error) {
                             $(document).find('[name=' + field_name + ']').after(
                                 '<small class="form-control-feedback text-danger errors"> ' +
-                                error + ' </small>')
+                                error + ' </small>'
+                            );
                         });
                     }
                 });
-            }));
+            });
         });
+
         
     </script>
 @endsection

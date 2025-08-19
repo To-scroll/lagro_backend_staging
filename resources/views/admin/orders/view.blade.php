@@ -389,9 +389,10 @@
                                 </div>
                             </div>
                         </li>
-                        <li><i class="ri-mail-line me-2 align-middle text-muted fs-16"></i>{{ $data->customer_email }}</li>
-                        <li><i class="ri-mail-line me-2 align-middle text-muted fs-16"></i>{{ $data->customers->address}}</li>
-                        <li><i class="ri-phone-line me-2 align-middle text-muted fs-16"></i>{{ $data->customer_phone }}</li>
+                        <li><i class="ri-mail-line me-2 align-middle text-muted fs-16"></i>{{ $data->customers->email }}</li>
+                        <li><i class="ri-map-pin-line me-2 align-middle text-muted fs-16"></i>{{ $data->customers->address }}</li>
+                        <li><i class="ri-phone-line me-2 align-middle text-muted fs-16"></i>{{ $data->customers->phone }}</li>
+
                     </ul>
                 </div>
             </div>
@@ -418,10 +419,10 @@
                 <div class="card-body">
                     <ul class="list-unstyled vstack gap-2 fs-13 mb-0">
                         <li class="fw-medium fs-14">{{ $data->customer_name }}</li>
-                        <li>{{ $data->address}}
-                            </li>
-                        <li>{{ $data->customer_pincode}}</li>
-                        <li>{{ $data->customer_phone }}</li>
+                        <li><i class="ri-mail-line me-2 align-middle text-muted fs-16"></i>{{ $data->customer_email }}</li>
+                        <li><i class="ri-map-pin-line me-2 align-middle text-muted fs-16"></i>{{ $data->address}},{{ $data->landmark}},{{ $data->pincode}}</li>
+                        <li><i class="ri-phone-line me-2 align-middle text-muted fs-16"></i>{{ $data->customer_phone }}</li>
+                        
                         {{-- <li>United States</li> --}}
                     </ul>
                 </div>

@@ -227,33 +227,33 @@
             });
 
         });
-        $(document).on('change', '.is_featured_status', function() {
-            var thisId = $(this).val();
+        // $(document).on('change', '.is_featured_status', function() {
+        //     var thisId = $(this).val();
 
-            $.ajax({
-                url: "changeCategory_status",
-                type: "post",
-                data: {
-                    'thisId': thisId,
-                    '_token': '{{ csrf_token() }}',
-                    'type': 'is_featured'
-                },
-                success: function(response) {
-                    if (response.message == 'success') {
-                        Swal.fire({
-                            position: 'center',
-                            icon: 'success',
-                            title: 'Status Changed',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        tableX.ajax.reload(null, false);
-                    }
-                }
+        //     $.ajax({
+        //         url: "changeCategory_status",
+        //         type: "post",
+        //         data: {
+        //             'thisId': thisId,
+        //             '_token': '{{ csrf_token() }}',
+        //             'type': 'is_featured'
+        //         },
+        //         success: function(response) {
+        //             if (response.message == 'success') {
+        //                 Swal.fire({
+        //                     position: 'center',
+        //                     icon: 'success',
+        //                     title: 'Status Changed',
+        //                     showConfirmButton: false,
+        //                     timer: 1500
+        //                 });
+        //                 tableX.ajax.reload(null, false);
+        //             }
+        //         }
 
-            });
+        //     });
 
-        });
+        // });
 
 
 
@@ -261,7 +261,7 @@
             let thisId = $(this).attr('data-id');
 
             Swal.fire({
-                title: 'Are you sure?',
+                title: 'Are you sure to delete this category?',
                 text: 'You will not be able to recover this record!',
                 icon: 'warning',
                 showCancelButton: true,

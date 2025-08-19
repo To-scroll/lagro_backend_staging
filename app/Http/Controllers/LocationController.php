@@ -62,7 +62,7 @@ class LocationController extends Controller
     {
         return view('admin.locations.create');
     }
-
+/*
     public function store(Request $request)
     {
       
@@ -70,20 +70,88 @@ class LocationController extends Controller
             'location_name' => 'required',
             'location_address' => 'required',
             'phone1' => 'required',
+            'state' => 'required',
             'map' => 'required',
         ]);
         
-       $data=new Location();
+        
+        $latitude = null;
+        $longitude = null;
+    
+        $mapUrl = $request->map;
+    
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        } 
+        elseif (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        }
+    
+        $data = new Location();
         $data->location_name = $request->location_name;
         $data->location_address = $request->location_address;
         $data->phone1 = $request->phone1;
         $data->phone2 = $request->phone2;
-        $data->map = $request->map;
-       
-        $data->created_at = date('Y-m-d H:i:s');
-        $data->updated_at = date('Y-m-d H:i:s');
+        $data->state = $request->state;
+        $data->map = $mapUrl;
+        $data->latitude = $latitude;
+        $data->longitude = $longitude;
+        $data->created_at = now();
+        $data->updated_at = now();
         
         $data->save();
+        return response()->json(['message' => 'success']);
+    }
+    */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'location_name' => 'required',
+            'location_address' => 'required',
+            'phone1' => 'required',
+            'state' => 'required',
+            'map' => 'required',
+        ]);
+        
+        $latitude = null;
+        $longitude = null;
+        $mapUrl = $request->map;
+    
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        } 
+        elseif (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        }
+        elseif (preg_match('/!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $longitude = $matches[1];
+            $latitude = $matches[2];
+        }
+    
+        if (!$latitude || !$longitude) {
+            return response()->json([
+                'message' => 'Could not extract latitude/longitude from the map link'
+            ], 422);
+        }
+    
+        $data = new Location();
+        $data->location_name = $request->location_name;
+        $data->location_address = $request->location_address;
+        $data->phone1 = $request->phone1;
+        $data->phone2 = $request->phone2;
+        $data->state = $request->state;
+        $data->map = $mapUrl;
+        $data->latitude = $latitude;
+        $data->longitude = $longitude;
+        $data->created_at = now();
+        $data->updated_at = now();
+        
+        $data->save();
+    
         return response()->json(['message' => 'success']);
     }
 
@@ -93,28 +161,104 @@ class LocationController extends Controller
         return view('admin.locations.edit', [
             'data' => $data]);
     }
-
+/*
     public function update(Request $request)
     {
         $request->validate([
             'location_name' => 'required',
             'location_address' => 'required',
             'phone1' => 'required',
+            'state' => 'required',
             'map' => 'required',
            
         ]);
+        $latitude = null;
+        $longitude = null;
+    
+        $mapUrl = $request->map;
+    
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        } 
+        elseif (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        } 
+        elseif (preg_match('/!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            // Extracted from embed link
+            $longitude = $matches[1];
+            $latitude = $matches[2];
+        }
         $data=Location::find($request->id);
         
         $data->location_name = $request->location_name;
         $data->location_address = $request->location_address;
         $data->phone1 = $request->phone1;
         $data->phone2 = $request->phone2;
-        $data->map = $request->map;
+        $data->state = $request->state;
+        $data->map = $mapUrl;
+        $data->latitude = $latitude;
+        $data->longitude = $longitude;
        
-        $data->created_at = date('Y-m-d H:i:s');
-        $data->updated_at = date('Y-m-d H:i:s');
+        $data->updated_at = now();
         
         $data->save();
+        return response()->json(['message' => 'success']);
+    }
+*/
+
+    public function update(Request $request)
+    {
+        dd($request);
+        $request->validate([
+            'location_name' => 'required',
+            'location_address' => 'required',
+            'phone1' => 'required',
+            'state' => 'required',
+            'map' => 'required',
+        ]);
+    
+        $latitude = null;
+        $longitude = null;
+        $mapUrl = $request->map;
+    
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        }
+        elseif (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        }
+        elseif (preg_match('/!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $longitude = $matches[1];
+            $latitude = $matches[2];
+        }
+
+        elseif (preg_match('/maps\/(-?\d+\.\d+),(-?\d+\.\d+)/', $mapUrl, $matches)) {
+            $latitude = $matches[1];
+            $longitude = $matches[2];
+        }
+
+        if (!$latitude || !$longitude) {
+            return response()->json([
+                'message' => 'Could not extract latitude/longitude from the map link'
+            ], 422);
+        }
+    
+        $data = Location::find($request->id);
+        $data->location_name = $request->location_name;
+        $data->location_address = $request->location_address;
+        $data->phone1 = $request->phone1;
+        $data->phone2 = $request->phone2;
+        $data->state = $request->state;
+        $data->map = $mapUrl;
+        $data->latitude = $latitude;
+        $data->longitude = $longitude;
+        $data->updated_at = now();
+        $data->save();
+    
         return response()->json(['message' => 'success']);
     }
 

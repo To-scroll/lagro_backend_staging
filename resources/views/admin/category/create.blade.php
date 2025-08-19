@@ -28,7 +28,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12 mb-3">
                                 <label class="form-label" for="product-title-input">Category Name</label>
 
                                 <input type="text" class="form-control" id="product-title-input" value=""
@@ -36,17 +36,17 @@
                                 <div class="invalid-feedback">Please Enter a product title.</div>
                             </div>
                            
-                            <div class="col-md-4">
-                                <label class="form-label" for="product-title-input">Status</label>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="product-title-input">Active Status</label>
 
                                 <select class="form-select" id="choices-publish-visibility-input" name="status"
                                     data-choices data-choices-search-false>
-                                    <option value="yes" selected {{ old('status') == 'yes' ? 'selected' : '' }}>Yes
-                                    </option>
-                                    <option value="no" {{ old('status') == 'no' ? 'selected' : '' }}>No</option>
+                                    <option value="no" >No</option>
+                                    <option value="yes" >Yes </option>
+                                    
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label" for="product-title-input">Is Parent Category</label>
 
                                 <select class="form-select" id="is_parent" name="is_parent" 
@@ -59,11 +59,11 @@
                            <div class="col-md-4 mb-3" id="subcategory"></div>
                             <div class="col-md-6">
                                 <label class="form-label" for="product-title-input">Priority</label>
-                                <input type="text" class="form-control" id="product-title-input" value=""
+                                <input type="number" class="form-control" id="product-title-input" value=""
                                     name="position" required>
 
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label" for="product-title-input">Category Icon</label>
                                 <input type="file" class="form-control" id="product-title-input" value=""
                                     name="category_icon" required>
@@ -90,7 +90,10 @@
            
             <div class="text-end mb-3">
                 <a href="{{ url('category') }}" class="btn btn-primary" style="width:95px;">Back</a>
-                <button type="submit" class="btn btn-success w-sm">Submit</button>
+                <button type="submit" class="btn btn-success w-sm" id="submit-button"> 
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    Submit
+                </button>
             </div>
             <!-- end col -->
         </div>
@@ -106,52 +109,52 @@
     }
 </style>
 
-<script>
-    $(document).ready(function() {
-        $('.description').summernote({
-            height: 300,
-            fontSizes: ['8', '9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24', '28', '32', '36', '40', '48'],
-            defaultFontSize: '15',
-            toolbar: [
-                ['style', ['bold', 'italic', 'underline', 'clear']],
-                ['fontname', ['fontname']],
-                ['fontsize', ['fontsize']],
-                ['color', ['color']],
-                ['para', ['ul', 'ol', 'paragraph']],
-                ['insert', ['link', 'picture', 'video']],
-            ],
-            fontNames: [
-                'Source Sans Pro',
-                'Arial',
-                'Helvetica',
-                'Times New Roman',
-                'Georgia',
-                'Verdana'
-            ],
-            fontNamesIgnoreCheck: [
-                'Source Sans Pro',
-                'Arial',
-                'Helvetica',
-                'Times New Roman',
-                'Georgia',
-                'Verdana'
-            ]
+    <script>
+        $(document).ready(function() {
+            $('.description').summernote({
+                height: 300,
+                fontSizes: ['8', '9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24', '28', '32', '36', '40', '48'],
+                defaultFontSize: '15',
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['fontsize', ['fontsize']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'picture', 'video']],
+                ],
+                fontNames: [
+                    'Source Sans Pro',
+                    'Arial',
+                    'Helvetica',
+                    'Times New Roman',
+                    'Georgia',
+                    'Verdana'
+                ],
+                fontNamesIgnoreCheck: [
+                    'Source Sans Pro',
+                    'Arial',
+                    'Helvetica',
+                    'Times New Roman',
+                    'Georgia',
+                    'Verdana'
+                ]
+            });
+    
+            // Toggle dropdown visibility manually
+            $('.note-editor .note-btn').on('click', function(e) {
+                e.stopPropagation();
+                $(this).next().toggleClass("show");
+            });
+    
+            // Hide dropdowns when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.note-dropdown-menu').length) {
+                    $('.note-editor .note-dropdown-menu').removeClass("show");
+                }
+            });
         });
-
-        // Toggle dropdown visibility manually
-        $('.note-editor .note-btn').on('click', function(e) {
-            e.stopPropagation();
-            $(this).next().toggleClass("show");
-        });
-
-        // Hide dropdowns when clicking outside
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.note-dropdown-menu').length) {
-                $('.note-editor .note-dropdown-menu').removeClass("show");
-            }
-        });
-    });
-</script>
+    </script>
 
     <script>
 
@@ -162,6 +165,10 @@
                 $(".errors").html('');
                 e.preventDefault();
                 $('#preloader').fadeIn(100);
+                
+                $('#submit-button').prop('disabled', true);
+                $('#submit-button .spinner-border').removeClass('d-none');
+
                 $.ajax({
                     url: "{{ route('categoryStore') }}",
                     type: "post",
@@ -170,8 +177,10 @@
                     cache: false,
                     processData: false,
                     success: function(response) {
-                        console
                         if (response.message == 'success') {
+                            $('#submit-button').prop('disabled', false);
+                            $('#submit-button .spinner-border').addClass('d-none');
+                            $('#preloader').fadeOut(100);
                             Swal.fire({
                                 position: 'center',
                                 icon: 'success',
@@ -190,6 +199,8 @@
                     error: function(response) {
 
                         $('#preloader').fadeOut(100);
+                        $('#submit-button').prop('disabled', false);
+                        $('#submit-button .spinner-border').addClass('d-none');
                         jsonValue = jQuery.parseJSON(response.responseText);
                         $.each(jsonValue.errors, function(field_name, error) {
                             $(document).find('[name=' + field_name + ']').after(
@@ -201,9 +212,6 @@
             }));
         });
         
-        $(document).ready(function(){
-             console.log("hai");
-        });
         $(document).on('change','#is_parent',function()
         {
           console.log("hai");

@@ -10,6 +10,7 @@ use \App\Models\Address;
 use \App\Models\Product;
 use \App\Models\Invoice;
 use \App\Models\InvoiceItems;
+use \App\Models\Sku;
 use Session;
 use DataTables;
 use PDF;
@@ -74,19 +75,39 @@ class InvoiceController extends Controller
 		
 			// })
 			return '<a href="' . url('download-invoice/' . $data->id) . '" class="btn btn-sm btn-soft-info messageView">
-			Download
-		</a>';
+            			Download
+            		</a>';
             })
 			->rawColumns(['action', 'invoice_no', 'name', 'address','checkbox','total_amount'])
 			->make(true);
 	}
+	
 	public function downloadInvoice($id)
 	{
-		$data=Invoice::with('InvoiceItems','customers','customerAddress')->find($id);
+
+		$data=Invoice::with('InvoiceItems','customers','customerAddress',)->find($id);
+		if (!$data) {
+            return redirect()->route('invoice.index')->with('error', 'Invoice not found.');
+        }
+        
+        if (!$data->customerAddress) {
+            return redirect()->route('invoice.index')->with('error', 'Customer address is missing.');
+        }
+    
+        if ($data->invoiceItems->isEmpty()) {
+            return redirect()->route('invoice.index')->with('error', 'Invoice items not found.');
+        }
+		$offerproduct = null;
+
+        if (!empty($data->offer_productsku)) {
+            $offerproduct = Sku::with('productItems')->find($data->offer_productsku);
+        }
+		
 		// echo "<pre>";print_r($data->customerAddress);exit;
 		//return view('admin.invoice.invoice', compact('data'));
-		$pdf = PDF::loadView('admin.invoice.invoice', compact('data'));
-		return $pdf->download('invoice'.$data->invoice_no.'.pdf');
+		$pdf = PDF::loadView('admin.invoice.invoice', compact('data','offerproduct'));
+ 		//return $pdf->stream('invoice'.$data->invoice_no.'.pdf');
+ 		return $pdf->download('invoice'.$data->invoice_no.'.pdf');
 	}
 	
 }

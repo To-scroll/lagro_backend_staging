@@ -9,7 +9,7 @@
         <th>Address</th>
         <th>Order Date</th>
         <th>Total Amount</th>
-        <th>Reference No</th>
+        <!--<th>Reference No</th>-->
         <th>Status</th>
         <th>Delivery Status</th>
         <th>Payment Method</th>  
@@ -27,7 +27,7 @@
            <td>{{ $order->address }} {{ $order->landmark }} {{ $order->pincode }}</td>
            <td>{{ date('d-m-Y',strtotime($order->date)) }}</td>
            <td>{{ $order->total_amount }}</td>
-           <td>{{ $order->reference_no }}</td>
+           <!--<td>{{ $order->reference_no }}</td>-->
            <td>{{ $order->status }}</td>
            <td>{{ $order->delivery_status }}</td>
            <td>{{ $order->payment_method }}</td>

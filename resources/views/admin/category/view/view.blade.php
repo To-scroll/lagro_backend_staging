@@ -22,7 +22,7 @@
                     <td>:{{$category->position}}</td>
                 </tr>
                 <tr>
-                    <td class="fw-medium" scope="row">Status:</td>
+                    <td class="fw-medium" scope="row">Active Status:</td>
                     <td>:{{$category->status}}</td>
                 </tr>
                 <tr>

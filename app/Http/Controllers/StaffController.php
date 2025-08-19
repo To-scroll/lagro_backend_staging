@@ -30,7 +30,8 @@ class StaffController extends Controller
     {
         $request->validate([
         'name' => 'required',
-        'email' => 'required|email|unique:users,email|unique:staff,email',
+        // 'email' => 'required|email|unique:users,email|unique:staff,email',
+        'email' => 'required|email:rfc,dns|unique:users,email|unique:staff,email',
         'phone' => 'required',
         'password' => 'required',
         'image' => 'required|image',
@@ -97,7 +98,8 @@ class StaffController extends Controller
     
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id . '|unique:staff,email,' . $staff->id,
+            // 'email' => 'required|email|unique:users,email,' . $user->id . '|unique:staff,email,' . $staff->id,
+            'email' => 'required|email:rfc,dns|unique:users,email,' . $user->id . '|unique:staff,email,' . $staff->id,
             'phone' => 'required',
             'image' => 'nullable|image',
         ]);

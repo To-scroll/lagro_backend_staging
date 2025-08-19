@@ -21,5 +21,10 @@ class CategoryProductDiscount extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+    
+    public function discount()
+    {
+        return $this->belongsTo(CategoryDiscount::class, 'category_discount_id'); // or appropriate FK
+    }
      
 }

@@ -144,29 +144,26 @@ class OfferController extends Controller
     public function offersViewPage(string $id)
     {
       $offer=Offer::find($id);
-        //   dd($offer);
         $offer_limit = $offer->offer_limit;
         $skus = Sku::with('sku_images')->get();
 
             $offer_products = [];
             
             foreach ($skus as $sku) {
-                if ($sku->special_price < $sku->price) 
+                if (!empty($sku->special_price) && $sku->special_price > 0 && $sku->special_price < $sku->price) 
                 {
-                    if ($sku->special_price <= $offer->offer_limit) 
-                    {
+                    if ($sku->special_price <= $offer->offer_limit) {
                         $offer_products[] = $sku;
                     }
                 } 
+                
                 else 
                 {
-                    if ($sku->price <= $offer->offer_limit) 
-                    {
+                    if ($sku->price <= $offer->offer_limit) {
                         $offer_products[] = $sku;
                     }
                 }
             }
-
       
       $offersView = View::make('admin.offers.view.view', ['offers' => $offer,'offer_products'=>$offer_products])->render();
       return response()->json(['offersView' => $offersView]);

@@ -104,10 +104,28 @@
             var tableX = $('#productTable').DataTable({
                 ajax: null,  // No ajax initially
                 columns: [
-                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false },
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-                    { data: 'icon', name: 'icon' },
-                    { data: 'product_name', name: 'product_name' }
+                    { 
+                        data: 'checkbox', 
+                        name: 'checkbox', 
+                        orderable: false, 
+                        searchable: false 
+                        
+                    },
+                    { 
+                        data: 'DT_RowIndex', 
+                        name: 'DT_RowIndex' 
+                        
+                    },
+                    { 
+                        data: 'icon', 
+                        name: 'icon' 
+                        
+                    },
+                    { 
+                        data: 'product_name', 
+                        name: 'product_name' 
+                        
+                    }
                 ],
                 processing: true,
                 serverSide: false,
@@ -155,7 +173,7 @@
                     processData: false,
                     success: function(response) {
                         console
-                        if (response.message == 'success') {
+                        if (response.status == true) {
                             Swal.fire({
                                 position: 'center',
                                 icon: 'success',
@@ -166,18 +184,18 @@
                             }).then(function() {
                                 window.location.href = '{{ url('category-discount') }}';
                             });
-
+                            $('#categoryDiscountForm')[0].reset();
                         }
                         else {
                             // Handle case where success is returned but message is not 'success'
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Oops...',
-                                text: 'Something went wrong!',
+                                text: response.message,
                             });
                         }
 
-                        $('#categoryDiscountForm')[0].reset();
+                        
                     },
                     error: function(response) {
                         $('#preloader').fadeOut(100);
@@ -198,6 +216,9 @@
                             );
                         });
                     }
+                    
+
+
                 });
             }));
 

@@ -83,6 +83,8 @@
 @section('scripts')
 
     <script>
+         
+        
         var tableX = $('#locationTable').DataTable({
             ajax: {
                 url: "{{ route('filter_locations') }}",

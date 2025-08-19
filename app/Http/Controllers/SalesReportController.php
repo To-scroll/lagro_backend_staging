@@ -117,7 +117,7 @@ class SalesReportController extends Controller
 				$view='<li><a href="'.url('orders').'/'.$data->id.'?from=salesreport'.'"  class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>';
                 $invoice = '<li>
                   <a class="dropdown-item downloadSalesReport" data-id="' . $data->id . '">
-                  <i class="ri-download-2-line fs-17 lh-1 align-middle text-muted"></i> Invoice
+                    <i class="ri-download-2-line fs-17 lh-1 align-middle text-muted"></i> Invoice
                   </a>
                 </li>';
                 return '<div class="dropdown d-inline-block">
@@ -163,6 +163,10 @@ class SalesReportController extends Controller
 		{
 			$data=$data->whereDate('date','<=',$request->date_to);
 		}
+		if ($request->has('cancel_status') && $request->cancel_status != 'all') {
+            $data = $data->where('cancel_status', $request->cancel_status);
+        }
+
 		$data=$data->get();
 		//echo"<pre>";print_r($data);exit;
 
@@ -188,6 +192,9 @@ class SalesReportController extends Controller
 		{
 			$data=$data->whereDate('date','<=',$request->date_to);
 		}
+		if ($request->has('cancel_status') && $request->cancel_status != 'all') {
+            $data = $data->where('cancel_status', $request->cancel_status);
+        }
 		$data=$data->get();
 		//echo"<pre>";print_r($data);exit;
 

@@ -28,7 +28,10 @@
                         <td colspan="3" class="text-center">No products available for offer</td>
                     </tr>
                 @else
+                
                     @foreach($offer_products as $product)
+                        
+
                         <tr>
                             <td>{{ $product->order_product_name }}</td>
                             <td>

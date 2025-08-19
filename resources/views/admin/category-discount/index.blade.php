@@ -58,6 +58,7 @@
                                 <th>Category Name</th>
                                 <th>From Date</th>
                                 <th>To Date</th>
+                                <th>Is Completed</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -114,7 +115,10 @@
                     data: 'to_date',
                     name: 'to_date'
                 },
-               
+               {
+                    data: 'completed',
+                    name: 'completed'
+                },
                 
                 {
                     data: 'action',
@@ -208,7 +212,5 @@
         
         
         
-
-       
     </script>
 @endsection

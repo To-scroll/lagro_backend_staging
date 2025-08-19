@@ -28,7 +28,7 @@ Route::post('sign-up', [LoginController::class, 'signUp']);
 Route::post('verify-signup', [LoginController::class, 'VerifySignup']);
 Route::post('forgot-password', [LoginController::class, 'forgotPassword']);
 Route::post('reset-password', [LoginController::class, 'resetPassword']);
-
+Route::post('resend-otp', [LoginController::class, 'resendOtp']);
 
 
 
@@ -70,47 +70,58 @@ Route::group(['middleware'=>['auth:api']],function(){
     
     Route::post('add-to-cart',[CartApiController::class,'addToCart']);
     Route::get('fetch-cart',[CartApiController::class,'fetchCart']);
+    Route::get('product-buy',[CartApiController::class,'productBuy']);
     
     Route::get('invoice-download', [UserApiController::class,'downloadInvoice']);
+     
 });
 
 
-Route::get('get-all',[HomeApiController::class,'index']);
+    Route::get('get-all',[HomeApiController::class,'index']);
+    
+    Route::get('shop-by-category',[ProductApiController::class,'getShopByCatProducts']);
+    Route::get('featured-products',[ProductApiController::class,'getFeaturedProducts']);
+    
+    Route::get('get-all-categories',[ProductApiController::class,'getAllCategories']);
+    Route::get('get-all-products',[ProductApiController::class,'getAllProducts']);
+    Route::get('search-products',[ProductApiController::class,'searchProducts']);
+    Route::post('get-product-price',[ProductApiController::class,'getProductPrice']);
+    
+    Route::get('get-products',[ProductApiController::class,'index']);
+    Route::get('single-product/{id}',[ProductApiController::class,'productDetails']);
+    
+    Route::post('new-products',[ProductApiController::class,'getNewProducts']);
+    Route::post('trending-products',[ProductApiController::class,'getTrendingProducts']);
+    
+    
+    Route::post('add-to-wishlist',[WishlistApiController::class,'addToWishlist']);
+    Route::get('fetch-wishlist',[WishlistApiController::class,'fetchWishlist']);
+    
+    
+    Route::get('get-locations',[HomeApiController::class,'getLocations']);
+    Route::post('add-contact',[HomeApiController::class,'addToContact']);
+       
+    Route::get('offer-details',[ProductApiController::class,'getOfferDetails']);
+    Route::get('get-offerProducts',[ProductApiController::class,'getOfferProducts']);
+    
+    Route::get('get-pages',[HomeApiController::class,'getPages']);
+    
+    Route::post('check-availabile',[UserApiController::class,'CheckAvailable']);
+    
+    Route::post('get-filtered-products',[ProductApiController::class,'getFilteredProducts']);
+    
+    Route::post('get-price-filtered-products',[ProductApiController::class,'getPriceFilteredProducts']);
+    
+    Route::get('get-largest-priced-product',[ProductApiController::class,'getLargestpriceproduct']);
+    
+    //only for special purpose
+    Route::post('clear-user', [LoginController::class, 'Clearuser']);
 
-Route::get('shop-by-category',[ProductApiController::class,'getShopByCatProducts']);
-Route::get('featured-products',[ProductApiController::class,'getFeaturedProducts']);
-
-Route::get('get-all-categories',[ProductApiController::class,'getAllCategories']);
-Route::get('get-all-products',[ProductApiController::class,'getAllProducts']);
-Route::get('search-products',[ProductApiController::class,'searchProducts']);
-Route::post('get-product-price',[ProductApiController::class,'getProductPrice']);
-
-Route::get('get-products',[ProductApiController::class,'index']);
-Route::get('single-product/{id}',[ProductApiController::class,'productDetails']);
-
-Route::post('new-products',[ProductApiController::class,'getNewProducts']);
-Route::post('trending-products',[ProductApiController::class,'getTrendingProducts']);
 
 
-Route::post('add-to-wishlist',[WishlistApiController::class,'addToWishlist']);
-Route::get('fetch-wishlist',[WishlistApiController::class,'fetchWishlist']);
 
 
-Route::get('get-locations',[HomeApiController::class,'getLocations']);
-Route::post('add-contact',[HomeApiController::class,'addToContact']);
-   
-Route::get('offer-details',[ProductApiController::class,'getOfferDetails']);
-Route::get('get-offerProducts',[ProductApiController::class,'getOfferProducts']);
 
-Route::get('get-pages',[HomeApiController::class,'getPages']);
-
-Route::Post('check-availabile',[UserApiController::class,'CheckAvailable']);
-
-Route::post('get-filtered-products',[ProductApiController::class,'getFilteredProducts']);
-
-Route::post('get-price-filtered-products',[ProductApiController::class,'getPriceFilteredProducts']);
-
-Route::get('get-largest-priced-product',[ProductApiController::class,'getLargestpriceproduct']);
-
-//only for special purpose
-Route::post('clear-user', [LoginController::class, 'Clearuser']);
+Route::get('/route', function () {
+    return response()->json(['message' => 'API working!']);
+});

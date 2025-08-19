@@ -17,17 +17,19 @@ class ApplyCategoryDiscounts extends Command
 
     public function handle()
     {
-        // \Log::info('Starting ApplyCategoryDiscounts');
+        \Log::info('Starting ApplyCategoryDiscounts');
 
         try {
             $now = Carbon::now();
 
             // Get all active discounts
             $activeDiscounts = CategoryDiscount::where('from_date', '<=', $now)
-                                               ->where('to_date', '>=', $now)
-                                               ->get();
+                                                ->where('to_date', '>=', $now)
+                                                ->where('completed', 'no')
+                                                ->get();
 
             foreach ($activeDiscounts as $discount) {
+                //  \Log::info('Applying discounts for category ID: ' . $discount->id);
                 $productDiscounts = CategoryProductDiscount::where('category_discount_id', $discount->id)->get();
 
                 foreach ($productDiscounts as $productDiscount) {

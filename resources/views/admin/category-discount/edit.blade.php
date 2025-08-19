@@ -59,6 +59,15 @@
 
                             </div>
                             
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="product-title-input">Completed</label>
+                                <select class="form-select" name="completed" required>
+                                    <option value="yes" {{ $data->completed == 'yes' ? 'selected' : '' }}>Yes</option>
+                                    <option value="no" {{ $data->completed == 'no' ? 'selected' : '' }}>No</option>
+                                </select>
+                            </div>
+
+                            
                         </div>
                         
                         <table id="productTable" class="table nowrap align-middle" style="width:100%">
@@ -98,22 +107,41 @@
         <!-- end row -->
 
     </form>
+
 @endsection
 @section('scripts')
  
     <script>
+        
          var selectedProductIds = @json($selectedProductIds ?? []);
             var initialCategoryId = '{{ $data->category_id }}';
-            
+            console.log(initialCategoryId);
             
         $(document).ready(function () {
             var tableX = $('#productTable').DataTable({
                 ajax: null,  // No ajax initially
                 columns: [
-                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false },
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-                    { data: 'icon', name: 'icon' },
-                    { data: 'product_name', name: 'product_name' }
+                    { 
+                        data: 'checkbox', 
+                        name: 'checkbox', 
+                        orderable: false, 
+                        searchable: false 
+                        
+                    },
+                    { 
+                        data: 'DT_RowIndex', 
+                        name: 'DT_RowIndex' 
+                        
+                    },
+                    { 
+                        data: 'icon', 
+                        name: 'icon' 
+                        
+                    },
+                    { 
+                        data: 'product_name', 
+                        name: 'product_name' 
+                    }
                 ],
                 processing: true,
                 serverSide: false,
@@ -127,14 +155,18 @@
             });
         
             function getProducts(categoryId) {
-                const ajaxUrl = "{{ url('cat_product_list') }}/" + categoryId;
-                tableX.ajax.url(ajaxUrl).load(); // tableX is defined now
+                const discountId = '{{ $data->id }}'; // Pass discount ID from Blade
+                const ajaxUrl = "{{ url('cat_product_list') }}/" + categoryId + "?discount_id=" + discountId;
+    
+                tableX.ajax.url(ajaxUrl).load();
                 tableX.on('draw', function () {
                     let total = $('.product-checkbox').length;
                     let checked = $('.product-checkbox:checked').length;
                     $('#checkAll').prop('checked', total > 0 && total === checked);
                 });
             }
+            
+
         
             // Now safe to call this
             getProducts(initialCategoryId);  // Make sure initialCategoryId is defined in your view or script
@@ -176,7 +208,7 @@
                     processData: false,
                     success: function(response) {
                         console
-                        if (response.message == 'success') {
+                         if (response.status == true) {
                             Swal.fire({
                                 position: 'center',
                                 icon: 'success',
@@ -188,17 +220,16 @@
                                 window.location.href = '{{ url('category-discount') }}';
                             });
 
+                         $('#categoryDiscountForm')[0].reset();
                         }
                         else {
                             // Handle case where success is returned but message is not 'success'
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Oops...',
-                                text: 'Something went wrong!',
+                                text: response.message,
                             });
                         }
-
-                        $('#categoryDiscountEditForm')[0].reset();
                     },
                     error: function(response) {
                         $('#preloader').fadeOut(100);

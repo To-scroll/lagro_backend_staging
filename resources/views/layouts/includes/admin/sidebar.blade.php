@@ -147,11 +147,15 @@
                             <i class="bx bx-purchase-tag"></i> <span data-key="t-dashboards">Discount-Offers</span>
                         </a>
                     </li>
-                    <li class="nav-item">           
+                    
+                    <li class="nav-item">
+                                    
                         <a class="nav-link menu-link {{ request()->is('staff') ? 'active' : '' }}" href="{{ route('staff.index') }}">
                            <i class="bx bx-user"></i> <span data-key="t-dashboards">Staff</span>
                         </a>
+                        
                     </li>
+        
                     @php
                         $webActive = request()->is('banner*') ||
                                      
@@ -202,7 +206,7 @@
                                 </li>
                                 <li class="nav-item">
                                     
-                                    <a class="nav-link menu-link {{ request()->is('customers') ? 'active' : '' }}" href="{{ route('customers.index')}}">
+                                    <a class="nav-link menu-link {{ request()->is('settings') ? 'active' : '' }}" href="{{ route('customers.index')}}">
                                         <i class="mdi mdi-account-group"></i> <span data-key="t-dashboards">Customers</span>
                                     </a>
                                     

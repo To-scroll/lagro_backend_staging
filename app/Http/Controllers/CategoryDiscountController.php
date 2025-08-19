@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 use Str;
 use App\Models\Product;
+use App\Models\Sku;
 use App\Models\CategoryDiscount;
 use App\Models\CategoryProductDiscount;
 
@@ -28,47 +29,12 @@ class CategoryDiscountController extends Controller
     }
     
     
-    /*
-    public function categoryProducts(Request $request,$id)
-    {
-
-        if ($request->ajax()) {
-            $data = Product::where('is_finished', 'yes')->where('category_ids',$id)->select('*');
-            \Log::info('hiii=============================================================================');
-            $cateDiscount=CategoryDiscount::where('category_id',$id)->first();
-             $assignedProductIds = CategoryProductDiscount::where('category_discount_id',$cateDiscount->id)
-            ->pluck('product_id')
-            ->toArray();
-            
-            return Datatables::of($data)
-
-                //->addColumn('checkbox', function ($data) {
-                    
-                //    return '<div class="form-check">
-                //        <input type="checkbox" class="form-check-input product-checkbox" name="product_ids[]" value="'.$data->id.'">
-                //    </div>';
-                //})
-                 ->addColumn('checkbox', function ($data) use ($assignedProductIds) {
-                $checked = in_array($data->id, $assignedProductIds) ? 'checked' : '';
-
-                return '<div class="form-check">
-                    <input type="checkbox" class="form-check-input product-checkbox" name="product_ids[]" value="'.$data->id.'" '.$checked.'>
-                </div>';
-            })
-
-                ->addIndexColumn()
-                
-                ->addColumn('icon', function ($data) {return '<img src="' . asset('public/images/product/icon') . '/' . $data->icon . '" style="width:50px;height:50px;">';
-
-                })
-                ->rawColumns([ 'icon','checkbox'])
-                ->make(true);
-
-        }
-    }*/
+ 
     
     public function categoryProducts(Request $request,$id)
     {    
+       
+
         if ($request->ajax()) {
             $data = Product::where('is_finished', 'yes')
                 ->where('category_id', $id)
@@ -76,15 +42,21 @@ class CategoryDiscountController extends Controller
         
             // \Log::info('Fetching category discount for category ID: ' . $id);
         
+
+        
             $assignedProductIds = [];
-        
-            $cateDiscount = CategoryDiscount::where('category_id', $id)->first();
-            if ($cateDiscount) {
-                $assignedProductIds = CategoryProductDiscount::where('category_discount_id', $cateDiscount->id)
-                    ->pluck('product_id')
-                    ->toArray();
+
+            if ($request->has('discount_id')) {
+                $cateDiscount = CategoryDiscount::find($request->discount_id);
+            
+                if ($cateDiscount) {
+                    $assignedProductIds = CategoryProductDiscount::where('category_discount_id', $cateDiscount->id)
+                        ->pluck('product_id')
+                        ->toArray();
+                }
             }
-        
+
+            
             return Datatables::of($data)
                 ->addColumn('checkbox', function ($data) use ($assignedProductIds) {
                     $checked = in_array($data->id, $assignedProductIds) ? 'checked' : '';
@@ -92,6 +64,7 @@ class CategoryDiscountController extends Controller
                         <input type="checkbox" class="form-check-input product-checkbox" name="product_ids[]" value="' . $data->id . '" ' . $checked . '>
                     </div>';
                 })
+                
                 ->addIndexColumn()
                 ->addColumn('icon', function ($data) {
                     return '<img src="' . asset('public/images/product/icon') . '/' . $data->icon . '" style="width:50px;height:50px;">';
@@ -112,15 +85,36 @@ class CategoryDiscountController extends Controller
             'product_ids' => 'required|array|min:1',
         ]);
 
-        $existingDiscount = CategoryDiscount::where('category_id', $request->category_id)
-            ->where('from_date', $request->from_date)
-            ->where('to_date', $request->to_date)
-            ->first();
-   
-        if ($existingDiscount) {
-            return response()->json(['status' => true, 'message' => 'there is a discount in same period with category']);
-        } 
+        $existingDiscounts = CategoryDiscount::where('category_id', $request->category_id)
+            ->where(function($query) use ($request) {
+                $query->where(function($q) use ($request) {
+                    $q->where('from_date', '<=', $request->to_date)
+                      ->where('to_date', '>=', $request->from_date);
+                });
+            })
+            ->with('categoryproducts')
+            ->get();
+
+        // echo "<pre>";
+        // print_r($existingDiscounts->toArray());
+        // echo exit;
+        $duplicate = false;
         
+        // Loop through existing discounts and check if any product matches
+        foreach ($existingDiscounts as $existing) {
+            $existingProductIds = $existing->categoryproducts->pluck('product_id')->toArray();
+        
+            foreach ($request->product_ids as $productId) {
+                if (in_array($productId, $existingProductIds)) {
+                    $duplicate = true;
+                    break 2; // exit both loops
+                }
+            }
+        }
+        
+        if ($duplicate) {
+            return response()->json(['status' => false, 'message' => 'A discount already exists for this product in the same category and date range.']);
+        }
         else {
             $discount = new CategoryDiscount();
             $discount->discount_name = $request->discount_name;
@@ -136,10 +130,6 @@ class CategoryDiscountController extends Controller
         }
     
         foreach ($request->product_ids as $productId) {
-            $existingProductDiscount = CategoryProductDiscount::where('category_discount_id', $discount->id)
-                ->where('product_id', $productId)
-                ->first();
-                
                 $productDiscount = new CategoryProductDiscount();
                 $productDiscount->category_discount_id = $discount->id;
                 $productDiscount->product_id = $productId;
@@ -153,63 +143,93 @@ class CategoryDiscountController extends Controller
         return response()->json(['status' => true, 'message' => 'success']);
     }
     
-    
-    
-    
-    
-    
-    
 
     public function edit($id)
     {
 
         $data = CategoryDiscount::find($id);
-        $categoryproducts=CategoryProductDiscount::where('category_discount_id',$data->id);
-         $categories=Category::get();
+        $categoryproducts=CategoryProductDiscount::where('category_discount_id',$data->id)->get();
+        $categories = Category::where('is_parent', 'no')->get();
+        
         return view('admin.category-discount.edit', [
             'data' => $data,
             'categoryproducts' => $categoryproducts,
             'categories'=>$categories,
         ]);
     }
-    
+ 
     public function update(Request $request, $id)
     {
         $request->validate([
+            'discount_name' => 'required',
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
             'discount' => 'required|numeric|min:0',
             'product_ids' => 'required|array|min:1',
+            'completed' => 'required|in:yes,no',
+            'category_id' => 'required',
         ]);
-
-            $discount = CategoryDiscount::findOrFail($id);
-            
-            $discount->discount_name = $request->discount_name;
-            $discount->category_id = $request->category_id;
-            $discount->from_date = $request->from_date;
-            $discount->to_date = $request->to_date;
-            $discount->discount = $request->discount;
-            $discount->created_by = \Auth::user()->id;
-            $discount->updated_by = \Auth::user()->id;
-            $discount->created_at = now();
-            $discount->updated_at = now();
-            $discount->save();
-        CategoryProductDiscount::where('category_discount_id', $discount->id)->delete();
-
-            // Insert new product discounts
-            foreach ($request->product_ids as $productId) 
-            {
-                
-                $productDiscount = new CategoryProductDiscount();
-                $productDiscount->category_discount_id = $discount->id;
-                $productDiscount->product_id = $productId;
-                $productDiscount->created_by = \Auth::user()->id;
-                $productDiscount->updated_by = \Auth::user()->id;
-                $productDiscount->created_at = now();
-                $productDiscount->updated_at = now();
-                $productDiscount->save();
+    
+        // Check for overlapping discounts
+        $existingDiscounts = CategoryDiscount::where('category_id', $request->category_id)
+            ->where('id', '!=', $id) 
+            ->where(function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('from_date', '<=', $request->to_date)
+                      ->where('to_date', '>=', $request->from_date);
+                });
+            })
+            ->with('categoryproducts')
+            ->get();
+    
+        $duplicate = false;
+    
+        foreach ($existingDiscounts as $existing) {
+            $existingProductIds = $existing->categoryproducts->pluck('product_id')->toArray();
+    
+            foreach ($request->product_ids as $productId) {
+                if (in_array($productId, $existingProductIds)) {
+                    $duplicate = true;
+                    break 2; // exit both loops
+                }
             }
-        return response()->json(['message' => 'success']);
+        }
+    
+        if ($duplicate) {
+            return response()->json([
+                'status' => false,
+                'message' => 'A discount already exists for one of the selected products in this category and date range.',
+            ]);
+        }
+    
+        // Proceed to update
+        $discount = CategoryDiscount::findOrFail($id);
+    
+        $discount->discount_name = $request->discount_name;
+        $discount->category_id = $request->category_id;
+        $discount->from_date = $request->from_date;
+        $discount->to_date = $request->to_date;
+        $discount->discount = $request->discount;
+        $discount->completed = $request->completed;
+        $discount->updated_by = \Auth::user()->id;
+        $discount->updated_at = now();
+        $discount->save();
+    
+        // Delete and re-insert associated products
+        CategoryProductDiscount::where('category_discount_id', $discount->id)->delete();
+    
+        foreach ($request->product_ids as $productId) {
+            $productDiscount = new CategoryProductDiscount();
+            $productDiscount->category_discount_id = $discount->id;
+            $productDiscount->product_id = $productId;
+            $productDiscount->created_by = \Auth::user()->id;
+            $productDiscount->updated_by = \Auth::user()->id;
+            $productDiscount->created_at = now();
+            $productDiscount->updated_at = now();
+            $productDiscount->save();
+        }
+    
+        return response()->json(['status' => true,'message' => 'success']);
     }
 
     public function show(string $id)
@@ -220,19 +240,40 @@ class CategoryDiscountController extends Controller
         return response()->json(['categoryDicsountView' => $categoryDicsountView]);
         
     }
-    
+
     public function destroy(string $id)
     {
-        
-       $data = CategoryDiscount::find($id);
-       {
-            $categoryproducts=CategoryProductDiscount::where('category_discount_id',$data->id);
-            $categoryproducts->delete();
-       }
-        $data->delete();
-        
-    }
+        $discount = CategoryDiscount::find($id);
     
+        if ($discount) {
+            // Reset SKUs before deleting the discount
+            $productDiscounts = CategoryProductDiscount::where('category_discount_id', $discount->id)->get();
+    
+            foreach ($productDiscounts as $productDiscount) {
+                $product = Product::find($productDiscount->product_id);
+    
+                if ($product) {
+                    $productSkus = Sku::where('product_id', $product->id)->get();
+    
+                    foreach ($productSkus as $sku) {
+                        $sku->discount = $sku->old_discount ?? 0;
+                        $sku->special_price = $sku->price - ($sku->price * ($sku->discount / 100));
+                        $sku->discount_applied = 'no';
+                        $sku->save();
+                    }
+                }
+            }
+    
+            // Delete the product-discount mapping
+            CategoryProductDiscount::where('category_discount_id', $discount->id)->delete();
+    
+            // Now delete the discount itself
+            $discount->delete();
+        }
+    
+        return response()->json(['message' => 'Discount deleted and SKUs restored successfully.']);
+    }
+
     
     
     
@@ -261,7 +302,8 @@ class CategoryDiscountController extends Controller
                     return $categoryName;
                 })
                 
-                ->rawColumns(['category_name', 'action'])
+                
+                ->rawColumns(['category_name','is_completed', 'action'])
                 
 				->addColumn('action', function ($data) {
 					$view = '<li><a class="dropdown-item discountViewBtn"  data-id="' .$data->id. '"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>';
@@ -290,17 +332,6 @@ class CategoryDiscountController extends Controller
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
+  
 
 }

@@ -29,10 +29,10 @@
         <th><b>Total Amount</b></th>
         <td align="left">{{ $order_data->total_amount }}</td>
       </tr>
-      <tr>
-        <th><b>Reference No</b></th>
-        <td>{{ $order_data->reference_no }}</td>
-      </tr>
+      <!--<tr>-->
+      <!--  <th><b>Reference No</b></th>-->
+      <!--  <td>{{ $order_data->reference_no }}</td>-->
+      <!--</tr>-->
       <tr>
         <th><b>Status</b></th>
          <td>{{ ucfirst($order_data->status) }}</td>

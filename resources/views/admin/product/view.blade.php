@@ -37,6 +37,7 @@
                 <div class="row gx-lg-5">
                     <div class="col-xl-4 col-md-8 mx-auto">
                         <div class="product-img-slider sticky-side-div">
+                            {{--
                             <div class="swiper product-thumbnail-slider p-2 rounded bg-light">
                                 <div class="swiper-wrapper">
                                     <div class="swiper-slide">
@@ -89,6 +90,89 @@
                                 </div>
                             </div>
                             <!-- end swiper nav slide -->
+                            --}}
+                            
+                            <div class="swiper product-thumbnail-slider p-2 rounded bg-light">
+                                <div class="swiper-wrapper">
+                                    @if(!empty($product->icon))
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('public/images/product/icon/'.$product->icon) }}" alt="" class="img-fluid d-block" />
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image1))
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('public/images/product/'.$product->image1) }}" alt="" class="img-fluid d-block" />
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image2))
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('public/images/product/'.$product->image2) }}" alt="" class="img-fluid d-block" />
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image3))
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('public/images/product/'.$product->image3) }}" alt="" class="img-fluid d-block" />
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image4))
+                                    <div class="swiper-slide">
+                                        <img src="{{ asset('public/images/product/'.$product->image4) }}" alt="" class="img-fluid d-block" />
+                                    </div>
+                                    @endif
+                                </div>
+                                <div class="swiper-button-next bg-white shadow"></div>
+                                <div class="swiper-button-prev bg-white shadow"></div>
+                            </div>
+                            
+                            <!-- Thumbnails -->
+                            <div class="swiper product-nav-slider mt-2">
+                                <div class="swiper-wrapper">
+                                    @if(!empty($product->icon))
+                                    <div class="swiper-slide">
+                                        <div class="nav-slide-item">
+                                            <img src="{{ asset('public/images/product/icon/'.$product->icon) }}" alt="" class="img-fluid d-block" />
+                                        </div>
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image1))
+                                    <div class="swiper-slide">
+                                        <div class="nav-slide-item">
+                                            <img src="{{ asset('public/images/product/'.$product->image1) }}" alt="" class="img-fluid d-block" />
+                                        </div>
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image2))
+                                    <div class="swiper-slide">
+                                        <div class="nav-slide-item">
+                                            <img src="{{ asset('public/images/product/'.$product->image2) }}" alt="" class="img-fluid d-block" />
+                                        </div>
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image3))
+                                    <div class="swiper-slide">
+                                        <div class="nav-slide-item">
+                                            <img src="{{ asset('public/images/product/'.$product->image3) }}" alt="" class="img-fluid d-block" />
+                                        </div>
+                                    </div>
+                                    @endif
+                            
+                                    @if(!empty($product->image4))
+                                    <div class="swiper-slide">
+                                        <div class="nav-slide-item">
+                                            <img src="{{ asset('public/images/product/'.$product->image4) }}" alt="" class="img-fluid d-block" />
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                     <!-- end col -->

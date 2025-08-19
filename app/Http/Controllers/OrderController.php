@@ -52,19 +52,12 @@ class OrderController extends Controller
         $offer_productsku=$data->offer_productsku;
         
         $offer_product=Sku::where('id',$offer_productsku)->with(['sku_images'])->first();
-    // dd($offer_product);
         $product = ' ';
         if($offer_product)
         {
             $product=Product::where('id',$offer_product->product_id)->first();
         }
-        // dd($product);
-            
-        // dd($offer_product);
-        // dd($data);
-        // echo "<pre>";
-        // print_r($data->customer_address);
-        // exit;
+       
         return view('admin.orders.view', [
             'data' => $data,
             'offer_product' => $offer_product,

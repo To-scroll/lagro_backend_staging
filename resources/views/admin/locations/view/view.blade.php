@@ -19,6 +19,11 @@
                     <td class="fw-medium" scope="row">Phone2:</td>
                     <td>{{$locations->phone2}}</td>
                 </tr>
+                <tr>
+                    <td class="fw-medium" scope="row">State:</td>
+                    <td>{{$locations->state}}</td>
+                </tr>
+                
             </tbody>
         </table>
     </div>

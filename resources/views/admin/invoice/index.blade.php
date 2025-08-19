@@ -17,6 +17,12 @@
         </div>
     </div>
 </div>
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
+        <strong>Error:</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
@@ -34,6 +40,7 @@
                             {{-- <a href="{{ route('badge.create')}}" class="btn btn-success"><i class="ri-add-line align-bottom me-1"></i>Add New Badge </a> --}}
                         </div>
                     </div>
+                    
                 </div>
             </div>
             <div class="card-body">
@@ -185,4 +192,12 @@ $('#filterBtn').on('click', function() {
 
  
 </script>
+<script>
+    $(document).ready(function () {
+        setTimeout(function () {
+            $('#errorAlert').fadeOut('slow');
+        }, 3000); // 3 seconds
+    });
+</script>
+
 @endsection

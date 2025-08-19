@@ -65,7 +65,7 @@
                                     </div>
                                     <div class="d-flex align-items-end justify-content-between mt-4">
                                         <div>
-                                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">₹ <span class="counter-value" data-target="{{$orderearnings}}">0</span>k </h4>
+                                            <h4 class="fs-22 fw-semibold ff-secondary mb-4">₹ <span class="counter-value" data-target="{{$orderearnings}}">0</span></h4>
                                             <a href="{{ route('sales-report')}}" class="text-decoration-underline">View net earnings</a>
                                         </div>
                                         <div class="avatar-sm flex-shrink-0">
@@ -204,7 +204,7 @@
                                         <!--end col-->
                                         <div class="col-6 col-sm-3">
                                             <div class="p-3 border border-dashed border-start-0">
-                                                <h5 class="mb-1">$<span class="counter-value" data-target="{{$orderearnings}}">0</span>k</h5>
+                                                <h5 class="mb-1">₹<span class="counter-value" data-target="{{$orderearnings}}">0</span></h5>
                                                 <p class="text-muted mb-0">Earnings</p>
                                             </div>
                                         </div>
@@ -261,49 +261,56 @@
                             </div>
 
                             
-                            <div class="p-3">
-                                <h6 class="text-muted mb-3 text-uppercase fw-semibold">Products Reviews</h6>
-                                <!-- Swiper -->
-                                <div class="swiper vertical-swiper" style="height: 250px;">
-                                    <div class="swiper-wrapper">
-                                        
-                                        @foreach($reviews as $review)
-                                            <div class="swiper-slide">
-                                                <div class="card border border-dashed shadow-none">
-                                                    <div class="card-body">
-                                                        <div class="d-flex">
-                                                            <div class="flex-shrink-0 avatar-sm">
-                                                                <div class="avatar-title bg-light rounded shadow">
-                                                                    <img src="{{ asset('public/logo/user-dummy-img.jpg') }}" alt="" height="30">
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-3">
-                                                                <div>
-                                                                    <p class="text-muted mb-1 fst-italic text-truncate-two-lines"> "{{$review->comment}}. "</p>
-                                                                    <div class="fs-11 align-middle text-warning">
-                                                                         @for ($i = 0; $i < $review->rating; $i++)
-                                                                            <i class="ri-star-fill"></i>
-                                                                        @endfor
-                                                                        @for ($i = $review->rating; $i < 5; $i++)
-                                                                            <i class="ri-star-line"></i>
-                                                                        @endfor
-                                                                    </div>
-                                                                </div>
-                                                                <div class="text-end mb-0 text-muted">
-                                                                    - by <cite title="Source Title">{{$review->name}}</cite>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                         
+                       @php
+    $reviewCount = $reviews->count();
+    $enableSwiper = $reviewCount > 1;
+@endphp
+
+<div class="p-3">
+    <h6 class="text-muted mb-3 text-uppercase fw-semibold">Product Reviews</h6>
+
+    <div class="vertical-swiper-wrapper" style="height: 250px;">
+        <div class="{{ $enableSwiper ? 'swiper vertical-swiper' : '' }}" style="height: 250px;">
+            <div class="{{ $enableSwiper ? 'swiper-wrapper' : '' }}">
+                @foreach($reviews as $review)
+                    <div class="{{ $enableSwiper ? 'swiper-slide' : '' }}">
+                        <div class="card border border-dashed shadow-none">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0 avatar-sm">
+                                        <div class="avatar-title bg-light rounded shadow">
+                                            <img src="{{ asset('public/logo/user-dummy-img.jpg') }}" alt="" height="30">
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div>
+                                            <p class="text-muted mb-1 fst-italic text-truncate-two-lines">"{{ $review->comment }}."</p>
+                                            <div class="fs-11 align-middle text-warning">
+                                                @for ($i = 0; $i < 5; $i++)
+                                                    @if ($i < $review->rating)
+                                                        <i class="ri-star-fill"></i>
+                                                    @else
+                                                        <i class="ri-star-line"></i>
+                                                    @endif
+                                                @endfor
                                             </div>
-                                        @endforeach
-                                        
-                                      
-                                        
+                                        </div>
+                                        <div class="text-end mb-0 text-muted">
+                                            - by <cite title="Source Title">{{ $review->name }}</cite>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
                            
 
@@ -322,6 +329,7 @@
 @section('scripts')
 
 <script>
+     
     $(document).ready(function() 
     {
         let chart;
@@ -340,7 +348,6 @@
                     const totalamountcomes = data.map(item => item.totalamountcomes);
                     const successOrders = data.map(item => item.success_orders);
                     const cancelledOrders = data.map(item => item.cancelled_orders);
-    
     
                     let barWidth = '50%'; 
                 
@@ -444,6 +451,8 @@
     });
 
 
+
+    
 
 </script>
 

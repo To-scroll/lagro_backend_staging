@@ -18,15 +18,17 @@ class ResetExpiredCategoryDiscounts extends Command
     public function handle()
     {
         $now = Carbon::now();
-
+        \Log::info('Starting ResetCategoryDiscounts');
         $expiredDiscounts = CategoryDiscount::where('to_date', '<', $now)
                                             ->where('completed', '!=', 'yes')
                                             ->get();
                                             
     
+        // \Log::info('Found expired discounts count: ' . $expiredDiscounts->count());
 
         foreach ($expiredDiscounts as $discount)
         {
+            // \Log::info('Resetting discounts for category ID: ' . $discount->id);
             $productDiscounts = CategoryProductDiscount::where('category_discount_id', $discount->id)->get();
             foreach ($productDiscounts as $productDiscount)
             {
@@ -39,10 +41,11 @@ class ResetExpiredCategoryDiscounts extends Command
                     foreach ($productSkus as $sku)
                     {
                         // Restore old discount
-                        $sku->discount = $sku->old_discount ?? 0;
+                        $sku->discount = $sku->old_discount;
                         // Recalculate special price
                         $sku->special_price = $sku->price - ($sku->price * ($sku->discount / 100));
                         $sku->discount_applied = 'no';
+                        
                         $sku->save();
                     }
                 }

@@ -24,7 +24,11 @@ Route::get('/', function () {
 
 
 
-Auth::routes();
+Auth::routes([
+    'register' => false, 
+    'reset' => false,   
+    'verify' => false,
+    ]);
 Route::group(['middleware' => 'auth'], function () 
 {
     
@@ -69,7 +73,7 @@ Route::get('/logout', 'App\Http\Controllers\Auth\LoginController@logout');
         Route::get('filter_categoryDiscount', ['as' => 'filter_categoryDiscount', 'uses' => 'App\Http\Controllers\CategoryDiscountController@filter_categoryDiscount']);
         Route::get('cat_product_list/{id}', 'App\Http\Controllers\CategoryDiscountController@categoryProducts');
         Route::get('categorydiscount-view/{id}', 'App\Http\Controllers\CategoryDiscountController@categoryDiscountViewPage')->name('category-discount.view');
-        
+      
     
         //attributes
         Route::resource('attributes', 'App\Http\Controllers\AttributeController');
@@ -247,15 +251,19 @@ Route::get('/logout', 'App\Http\Controllers\Auth\LoginController@logout');
         
         Route::resource('blog', 'App\Http\Controllers\BlogController');
         Route::get('filter_blog', ['as' => 'filter_blog', 'uses' => 'App\Http\Controllers\BlogController@filter_blog']);
+        // Route::post('cmsStore', ['as' => 'cmsStore', 'uses' => 'App\Http\Controllers\CmsController@store']);
+        // Route::post('cmsUpdate', ['as' => 'cmsUpdate', 'uses' => 'App\Http\Controllers\CmsController@update']);
+        // Route::get('cmsView', ['as' => 'cmsView', 'uses' => 'App\Http\Controllers\CmsController@cmsView']);
         Route::post('blogStatusChange', ['as' => 'blogStatusChange', 'uses' => 'App\Http\Controllers\BlogController@BlogStatusChange']);
 
+    
+     
         Route::resource('staff', 'App\Http\Controllers\StaffController');
         Route::get('filter_staff', ['as' => 'filter_staff', 'uses' => 'App\Http\Controllers\StaffController@filter_staff']);
-    
+        
     
    
 });
-
 
 
 Route::get('/clear-cache', function() {

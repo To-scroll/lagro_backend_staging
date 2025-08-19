@@ -45,7 +45,7 @@
                                 
                                 <input type="password" class="form-control" id="email" name="password" placeholder="Enter Password" required>
                             </div>
-
+                            
                             <div class="col-md-6 mb-2">
                                 <label class="form-label" for="phone">Phone</label>
                                 

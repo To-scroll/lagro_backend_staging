@@ -161,25 +161,7 @@ class BadgeController extends Controller
         exit;
     }
 
-    /*    public function inslug()
-{
-$data=Badge::get();
-$set=[];
-foreach($data as $row)
-{
-$set=[
-['slug'=>$row->badge_name],
-];
-
-}
-
-foreach($data as $row)
-{
-$row->slug=Str::slug($row->badge_name);
-$row->save();
-}
-
-}*/
+   
    public function getColor()
    {
     $colors=Badge::pluck('colour');

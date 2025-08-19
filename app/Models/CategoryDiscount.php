@@ -20,6 +20,10 @@ class CategoryDiscount extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+     public function categoryproducts()
+    {
+        return $this->hasMany(CategoryProductDiscount::class, 'category_discount_id','id');
+    }
     
 
 }

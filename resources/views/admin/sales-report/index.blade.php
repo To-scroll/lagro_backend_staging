@@ -234,7 +234,16 @@ $(document).on('click','#exportSalesReport',function(){
             url: "{{ route('exportSalesReport') }}",
 
             
-             data: {'date_from':date_from,'date_to':date_to,'customer_name':customer_name,'order_no':order_no,'_token': '{{ csrf_token() }}'},
+             data: 
+                {
+                    'date_from':date_from,
+                    'date_to':date_to,
+                    'customer_name':customer_name,
+                    'order_no':order_no,
+                    'cancel_status': cancel_status,
+                    '_token': '{{ csrf_token() }}'
+                    
+                },
              xhrFields: {
                     responseType: 'blob'
                 },
@@ -259,7 +268,16 @@ $(document).on('click','#productwise-exportReport',function(){
             url: "{{ route('export-productwise-salesReport') }}",
 
             
-             data: {'date_from':date_from,'date_to':date_to,'customer_name':customer_name,'order_no':order_no,'_token': '{{ csrf_token() }}'},
+             data: 
+             {
+                 'date_from':date_from,
+                 'date_to':date_to,
+                 'customer_name':customer_name,
+                 'order_no':order_no,
+                 'cancel_status': cancel_status,
+                 '_token': '{{ csrf_token() }}'
+                 
+             },
              xhrFields: {
                     responseType: 'blob'
                 },
